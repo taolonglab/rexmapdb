@@ -8,7 +8,6 @@ cd himapdb
 
 To run these scripts you need:
 * Python 3, with modules Biopython and Pandas installed
-* blastn: command line NCBI nucleotide blastn installed
 
 
 ## Metadata

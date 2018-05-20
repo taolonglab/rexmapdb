@@ -30,7 +30,7 @@ import pandas as pd
 from io import StringIO
 from subprocess import Popen, PIPE
 
-def os ():
+def get_os ():
     """ Detect operating system. """
     os_sys = platform.system()
     if os_sys == 'Linux':
@@ -39,6 +39,13 @@ def os ():
         return 'macos'
     else:
         return ''
+    
+# Script folder sys.path[0]
+
+def get_blast_path ():
+    """ Generate an absolute BLAST path. """
+    sys_os = get_os()
+    return os.path.join(sys.path[0], 'bin', 'blastn_'+sys_os)
 
 
 def fasta_to_df (input_fa):
@@ -327,5 +334,6 @@ if __name__ == '__main__':
     else:
         filter = 'V'
     
-    main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, fasta_out_dir,
+    main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, 
+         fasta_out_dir, blast_path = get_blast_path(),
          overhang=overhang, primer_file_filter=filter)
