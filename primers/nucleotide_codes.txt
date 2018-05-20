@@ -1,0 +1,17 @@
+nt	alternatives
+A	A
+C	C
+G	G
+T	T
+Y	C,T
+R	A,G
+W	A,T
+S	G,C
+K	T,G
+M	C,A
+D	A,G,T
+V	A,C,G
+H	A,C,T
+B	C,G,T
+X	A,C,G,T
+N	A,C,G,T
