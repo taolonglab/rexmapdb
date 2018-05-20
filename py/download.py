@@ -29,7 +29,7 @@ try:
         urls = sys.stdin.readlines()
     else:
         urls = open(sys.argv[1]).readlines()
-    if len(sys.argv) >= 3:
+    if len(sys.argv) == 3:
         num_conn = int(sys.argv[2])
 except:
     print("Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0])
@@ -80,6 +80,7 @@ while num_processed < num_urls:
         print('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed), end='')
     if len(queue) < 1:
         break
+    # If file exists, don't download it again. THIS DOES NOT CHECK INCOMPLETE DOWNLOADS!
     if os.path.isfile(queue[0][1]):
         num_processed += 1
         del queue[0]
@@ -132,3 +133,4 @@ for c in m.handles:
         c.fp = None
     c.close()
 m.close()
+print('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed))

@@ -38,11 +38,12 @@ def strain_name_from_genome_string (text):
 if __name__ == '__main__':
     
     out_path = sys.argv[1]
-    # out_data = sys.argv[2]
-    #out_path = '/Users/igor/cloud/research/microbiome/genomes/data/'
-    #out_data = '/Users/igor/data/ncbi_genomes'
-
-    kingdoms = ['archaea', 'bacteria']
+    # out_path = '/Users/igor/Downloads/himapdb/data'
+    if len(sys.argv) == 3:
+        kingdoms = sys.argv[2].strip().split(',')
+    else:
+        kingdoms = ['archaea', 'bacteria']
+    print('Kingdoms: ', ', '.join(kingdoms))
     
     # Generate current date
     dt = datetime.datetime.now()
@@ -75,11 +76,7 @@ if __name__ == '__main__':
                        'organism_name': str, 'infraspecific_name': str,
                        'assembly_level': str, 'seq_rel_date': str, 'ftp_path': str})
         print('OK.')
-        
-        # Filter out apparently wrong assemblies
-        blacklist = ['GCF_001909175.1']  # Bacillus cereus BC04 with E. coli lab strain 16s
-        ass_df = ass_df[~ass_df['# assembly_accession'].isin(blacklist)] 
-        
+                
         # For each strain select only the best assembly
         print('- Processing and fixing assembly summary table')
         ass_df['infraspecific_name'] = [re.sub('_TMP.*', '', str(x).replace('strain=', '').replace('nan', '').replace('substr. ', '')) \
@@ -100,6 +97,7 @@ if __name__ == '__main__':
         n_miss_strain = 0
         tmp = []
         for i in range(len(ass_df)):
+            
             strain_name = ass_df['strain_name'][i]
             strain = ass_df['infraspecific_name'][i]
             strain = re.sub('substr.*', '', strain)
@@ -153,8 +151,8 @@ if __name__ == '__main__':
     
         with open(fea_out, 'w') as f_out, open(seq_out, 'w') as s_out:
             for i, row in enumerate(ass_df_filter.itertuples()):
-                f_out.write(os.path.join(row[7], os.path.basename(row[7])+'_feature_table.txt.gz\n'))
-                s_out.write(os.path.join(row[7], os.path.basename(row[7])+'_genomic.fna.gz\n'))
+                f_out.write(os.path.join(row[8], os.path.basename(row[8])+'_feature_table.txt.gz\n'))
+                s_out.write(os.path.join(row[8], os.path.basename(row[8])+'_genomic.fna.gz\n'))
                 if i % 100 == 0 or i == len(ass_df_filter)-1:
                     print('\r- Processed % 5d out of % 5d assembly records.' % (i+1, len(ass_df_filter)), end='')
         print('\n- Saved feature and sequence URLs.')

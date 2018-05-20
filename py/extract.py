@@ -40,7 +40,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
         
     """
     
-    #%% first load the main summary file
+    #%% first load the main assembly summary file
     ass = pd.read_csv(ass_sub, sep='\t', usecols=['# assembly_accession', 'ftp_path'],
                       dtype={'# assembly_accession': str, 'ftp_path': str})
     
@@ -55,7 +55,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
     #
     
     # Keep track of already processed assembly IDs in this list
-    # ass_exist = set([])
+    ass_exist = set([])
     last_assid = ''
     i0 = 0
     if os.path.isfile(fa_out_name) and fa_out_exist_action == 'append':
@@ -66,9 +66,12 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                 exist_count = 0
                 for record in SeqIO.parse(f_out, 'fasta'):
                     last_assid = record.id.strip().split(delim)[0]
-                    # ass_exist |= set([last_assid])
+                    ass_exist |= set([last_assid])
                     exist_count += 1
-            i0 = ass.index[ass['# assembly_accession'] == last_assid].tolist()[0]                    
+            try:
+                i0 = ass.index[ass['# assembly_accession'] == last_assid].tolist()[0]                    
+            except IndexError:
+                i0 = 0
             print('OK. Added % 5d sequences.' % (exist_count))
             write_mode = 'a'
         elif fa_out_exist_action == 'overwrite':
@@ -86,8 +89,19 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
         n_wrong_len = 0
         n_missing_assids = 0 # Keep track of missing records
         n_empty_assids = 0 # Keep track of the number of empty records (either GFF.GZ or FNA.GZ)
+        n_existing_assids = 0 # Number of records already in the FASTA file
+        
         for i in range(i0, len(ass)): 
+            
+            print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
+                    n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids), end='')
+            
             ass_id = ass.iloc[i]['# assembly_accession']
+
+            # Check if this assembly ID is already in the FASTA file
+            if ass_id in ass_exist:
+                n_existing_assids += 1
+                continue
             
             # ass_f_path = '../data/bacteria/features/' + \
             ass_f_path = os.path.join(ass_f_dir,
@@ -105,6 +119,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
             if os.path.getsize(ass_f_path) == 0 or os.path.getsize(ass_s_path) == 0:
                 n_empty_assids += 1
                 continue
+            
             
             # Now load feature, extract coordinates for '16s ribosomal RNA' annotations
             try:
@@ -156,9 +171,10 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                     # Error reading sequence data, skip it.
                     n_missing_assids += 1
                     continue
+            print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
+                n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids))
+
             
-            print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len).' % (i, len(ass),
-                    n_missing_assids, n_empty_assids, n_wrong_len), end='')
 
 #%% run this is script is run directly and not imported
 if __name__ == '__main__':
@@ -181,7 +197,5 @@ if __name__ == '__main__':
     
     ass_sub = in_file
     fa_out_name = out_fa
-    # in_file = sys.argv[1]
-    # out_fa = sys.argv[2]
     main(in_file, out_fa, ass_f_dir=ass_f_dir, 
          ass_s_dir=ass_s_dir, fa_out_exist_action=action)

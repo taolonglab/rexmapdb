@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 """
 Count the number of unique genuses, species and strains in our
-database.
+database and compare it to SILVA. This script is not used to 
+generate HiMAP db, just to make statistics and compare it to
+SILVA.
 
 Created on Fri Apr 20 08:30:28 2018
 
