@@ -24,12 +24,21 @@ Created on Thu Jul 27 13:27:07 2017
 
 @author: igor
 """
-# from merge_16sntncbi_fullgenomes import strain_name_from_genome_string
-import sys, os, re
+
+import sys, os, re, platform
 import pandas as pd
 from io import StringIO
-# from shlex import quote
 from subprocess import Popen, PIPE
+
+def os ():
+    """ Detect operating system. """
+    os_sys = platform.system()
+    if os_sys == 'Linux':
+        return 'linux'
+    elif os_sys == 'Darwin':
+        return 'macos'
+    else:
+        return ''
 
 
 def fasta_to_df (input_fa):
@@ -146,80 +155,6 @@ def blast_out_vregion (df, overhang=0):
     return seq[(start+1-overhang):(end+overhang)]
 
 
-#%% strain names from assembly table
-
-#def generate_strain_names_in_assembly_table (ass_df, verbose=False, replace_space=None):
-#    """ Generate a 'strain name' column in the data frame of the assembly summary
-#    table. """    
-#    ass_df['infraspecific_name'] = [str(x).replace('strain=', '').replace('nan', '') \
-#          for x in ass_df['infraspecific_name']]
-#
-#    ass_df['strain_name'] = [strain_name_from_genome_string(x) for x in ass_df['organism_name']]
-#
-#    # Fix bacterial full genome table annotations
-#    # Check if infraspecific name is in strain_name. If not, then concat it.
-#    # print('- adding missing strain names ', end='')
-#    n_miss_strain = 0
-#    tmp = []
-#    for i in range(len(ass_df)):
-#        strain_name = ass_df['strain_name'][i]
-#        strain = ass_df['infraspecific_name'][i]
-#        strain = re.sub('substr.*', '', strain)
-#        if strain not in strain_name and \
-#           strain.replace(' ', '') not in strain_name and \
-#           '(' not in strain_name:
-#            ass_df.loc[i, 'strain_name'] = strain_name + ' ' + strain
-#            n_miss_strain = n_miss_strain + 1
-#            tmp.append(i)
-#        # Progress bar
-#        if verbose and  (i % 1000 == 0 or i == len(ass_df)-1):
-#            print('\r* adding missing strain names (% 5d out of % 5d processed)' % (i, len(ass_df)), end='')
-#    if replace_space is not None:
-#        ass_df['strain_name'] = [s.replace(' ', replace_space) for s in ass_df['strain_name']]
-#    if verbose:
-#        print(' OK.\n'+str(n_miss_strain)+' strain ids added.')
-    
-
-#%% Filter the assembly table by keeping only the best quality entries
-# for each unique strain.
-
-def filter_assembly_table (ass_df, verbose=False):
-    # Add columns that describe the quality of each column we are considering
-    # Run this after adding strain_name column.
-    ass_df['assembly_level_int'] = 0
-    ass_df.loc[ass_df['assembly_level'] == 'Complete Genome', 'assembly_level_int'] = 4
-    ass_df.loc[ass_df['assembly_level'] == 'Chromosome', 'assembly_level_int'] = 3
-    ass_df.loc[ass_df['assembly_level'] == 'Scaffold', 'assembly_level_int'] = 2
-    ass_df.loc[ass_df['assembly_level'] == 'Contig', 'assembly_level_int'] = 1
-    ass_df['refseq_category_int'] = 0
-    ass_df.loc[ass_df['refseq_category'] == 'reference genome', 'refseq_category_int'] = 2
-    ass_df.loc[ass_df['refseq_category'] == 'representative genome', 'refseq_category_int'] = 1
-    
-    # Now iterate over all unique strains   
-    ass_df_grp = ass_df.groupby('strain_name')
-    ass_df_filter_list = []
-    # Keep track of number of every category we select when there are multiple
-    # assemblies for the exact strame strain name.
-    # For each category select the newest genome (by seq_rel_date).
-    no_ties = 0
-    no_groups = len(ass_df_grp)    
-    for i, (strain_name, gr) in enumerate(ass_df_grp):        
-        # Find the best ranked 
-        gr_b = gr.loc[gr['assembly_level_int'] == max(gr['assembly_level_int'])]
-        gr_b = gr_b.loc[gr_b['refseq_category_int'] == max(gr_b['refseq_category_int'])]
-        gr_b = gr_b.loc[gr_b['seq_rel_date'] == max(gr_b['seq_rel_date'])]        
-        if len(gr_b) > 1:
-            # Tie, grab the first one in the list
-            no_ties = no_ties + 1
-            gr_b = gr_b[1:2]
-        ass_df_filter_list.append(gr_b)
-        # Progress bar
-        if verbose and (i % 100 == 0 or i == len(ass_df)-1):
-            print('\r* find unique assembly data (% 5d out of % 5d)' % (i, no_groups), end='')
-    if verbose:
-        print(' OK.\n')            
-    return pd.concat(ass_df_filter_list, ignore_index=True)
-
 
 #%% main call
 def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, 
@@ -229,24 +164,10 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     
     print('Count 16S hypervariable regions')
     # Load full genome assembly 16S sequences
-    # path = os.path.expanduser('~/cloud/research/microbiome/genomes/data/bacteria/')
-    #    blast_path = ['/usr/local/ncbi/blast/bin/blastn', 
-    #                  'C:/Program Files/NCBI/blast-2.7.1+/bin/'][sys.platform == 'win32']
-    # ass_fasta = path+'16s_from_genomes_2017-07-20.fasta'
     
     # If we want to process only specific primer set add it here as a string
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
-    
-    # For bacteria use wpartial file
-    # assembly_file = path+'bacteria_assembly_summary_sub_2017-07-20.txt'
-    # out_folder = os.path.expanduser('~/data/fasta_by_assid_fix')
-    # ass_df = pd.read_csv(assembly_file, sep='\t')
-    
-    # PCR primer files
-    # Just load all files from the folder into a list and iterate over it.
-    # primer_dir = os.path.expanduser('~/cloud/research/microbiome/genomes/data/pcr_primers')
-    # fasta_out_dir = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db')    
     
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
@@ -256,7 +177,6 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     
 
     # Load the table between full accession id (from FASTA) and full 16S sequence.
-    # ass_dict = fasta_to_dict_of_lists(ass_fasta, sep=';')
     ass_to_seq_df = pd.concat([fasta_to_df(ass_fasta_a), fasta_to_df(ass_fasta_b)],
                                ignore_index=True)
     ass_to_seq_df['ass_id'] = [m.split(';')[0] for m in ass_to_seq_df['meta']]
@@ -271,11 +191,6 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
                      dtype={'# assembly_accession': str, 'strain_name': str})
 
     ass_df = pd.concat([ass_df_a, ass_df_b], ignore_index=True)
-    # Generate strain names from organism_name and infraspecific_name entries
-    # generate_strain_names_in_assembly_table(ass_df, verbose=True, replace_space='_')
-    
-    # Filter the table by keeping only strain names with best quality assemblies
-    # ass_df = filter_assembly_table(ass_df, verbose=True)
     
     # Rename the assembly accession column
     ass_df = ass_df.rename(columns={'# assembly_accession': 'ass_id'})
@@ -287,10 +202,6 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     # Generate a dictionary between accession id and strain name for easy access later
     ass_to_strain_dict = ass_df[['ass_id', 'strain_name']].set_index('ass_id').to_dict()['strain_name']
     
-    # BLAST path
-    # blast_path = '/usr/local/ncbi/blast/bin/blastn'
-    # blast_db = os.path.expanduser('~/cloud/research/microbiome/genomes/data/bacteria/16s_from_genomes_2017-07-20')
-
     # Iterate over each primer pair combination
     for primer_file in primer_files:
         
@@ -400,17 +311,18 @@ if __name__ == '__main__':
     #assembly_file_a = ''
     #assembly_file_b = ''
     
-    ass_fasta_a = sys.argv[1]
-    ass_fasta_b = sys.argv[2]
-    assembly_file_a = sys.argv[3]
-    assembly_file_b = sys.argv[4]
-    primer_dir = sys.argv[5]
-    fasta_out_dir = sys.argv[6]
-    if len(sys.argv) >= 8:
+    ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
+    ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
+    assembly_file_a = sys.argv[3]   # Assembly summary filtered for archaea
+    assembly_file_b = sys.argv[4]   # Assembly summary filtered for bacteria
+    primer_dir = sys.argv[5]        # Folder with FASTA files for PCR primers
+    fasta_out_dir = sys.argv[6]     # Output folder for the final FASTA and table
+    
+    if len(sys.argv) >= 8:          # Argument 8 is overhang
         overhang = sys.argv[7]
     else:
         overhang = 0
-    if len(sys.argv) >= 9:
+    if len(sys.argv) >= 9:          # Argument 9 is text filter for hypervariable region
         filter = sys.argv[8]
     else:
         filter = 'V'

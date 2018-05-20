@@ -6,6 +6,10 @@ git clone https://github.com/taolonglab/himapdb.git
 cd himapdb
 ```
 
+To run these scripts you need:
+* Python 3, with modules Biopython and Pandas installed
+* blastn: command line NCBI nucleotide blastn installed
+
 
 ## Metadata
 
@@ -89,8 +93,32 @@ python3 py/extract.py \
 
 The last line will add Bacteria sequences to the existing output FASTA files.
 
+## Generate files for each primer set
+
+```sh
+
+python3 py/primers_fasta.py \
+    primers/nucleotide_codes.txt \
+    primers/pcr_primers_table.txt \
+    data/pcr_primers    
+```
+
+The `data/pcr_primers` folder now contains FASTA files for each primer set:
+* V1-V8_8F-1392R.fasta
+* V3-V4-2_341F-805R.fasta
+* V3-V4-V5-V8_337F-1392R.fasta
+* V3-V4-V5_337F-926R.fasta
+* V3-V4_337F-805R.fasta
+* V4_515F-805R.fasta
+
 
 ## Count hypervariable variants
 
+```sh
+python3 py/count.py \
+    
+```
 
+## Add RefSeq hypervariable variants
 
+We go through each strain name from the NCBI RefSeq search results and add sequences if the strain name is not an exact match to something already in the database.
