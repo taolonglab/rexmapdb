@@ -38,7 +38,7 @@ def strain_name_from_genome_string (text):
 if __name__ == '__main__':
     
     out_path = sys.argv[1]
-    out_data = sys.argv[2]
+    # out_data = sys.argv[2]
     #out_path = '/Users/igor/cloud/research/microbiome/genomes/data/'
     #out_data = '/Users/igor/data/ncbi_genomes'
 
