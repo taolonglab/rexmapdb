@@ -15,7 +15,7 @@ import os, sys, re, pickle
 # from subprocess import Popen, PIPE
 # from io import StringIO
 import pandas as pd
-from count import blast_primers_vs_sequences, blast_out_vregion
+from count import blast_primers_vs_sequences, blast_out_vregion, get_blast_path
 
 def fasta_to_dict (input_fa, keys=None, sep=' ', post_process=None,
                    post_process_seq=None, ignore_duplicates=True,
@@ -159,10 +159,17 @@ if __name__ == '__main__':
     out_table = os.path.join(os.path.dirname(variant_table), 'V3-V4_341F-805R_hang22_wrefseq_table.txt')
     out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V3-V4_341F-805R_hang22_wrefseq_sequences.fasta')
 
+    variant_table = sys.argv[1]
+    variant_fasta = sys.argv[2]
+    primer_file = sys.argv[3]
+    out_table = sys.argv[4]
+    out_fasta = sys.argv[5]
     
-    overhang = 22
+    # overhang = 22
+    overhang = int(sys.argv[6])
     
-    blast_path='/usr/local/ncbi/blast/bin/blastn'
+    #blast_path='/usr/local/ncbi/blast/bin/blastn'
+    blast_path = get_blast_path()
     
     print('- load NCBI 16S search FASTA...', end='')
     ncbi16s_dict = fasta_to_dict(ncbi_fasta, post_process='strain_name_from_refseq_string', post_process_seq='seq_to_basic_code')

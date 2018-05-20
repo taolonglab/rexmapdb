@@ -45,7 +45,7 @@ def get_os ():
 def get_blast_path ():
     """ Generate an absolute BLAST path. """
     sys_os = get_os()
-    return os.path.join(sys.path[0], 'bin', 'blastn_'+sys_os)
+    return os.path.join(os.path.dirname(sys.path[0]), 'bin', 'blastn_'+sys_os)
 
 
 def fasta_to_df (input_fa):
@@ -176,6 +176,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
     
+    print('* Load files: ', end='')
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
     
@@ -208,10 +209,14 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
 
     # Generate a dictionary between accession id and strain name for easy access later
     ass_to_strain_dict = ass_df[['ass_id', 'strain_name']].set_index('ass_id').to_dict()['strain_name']
+    print('OK.')
+    print('* BLAST path: '+blast_path)
     
     # Iterate over each primer pair combination
     for primer_file in primer_files:
         
+        print('* Primer FASTA: '+primer_file)
+        print('* Assembly FASTA: '+ass_fasta_a)
         print('\r* '+os.path.splitext(os.path.basename(primer_file))[0]+': blast...', end='')
         # Run BLAST with 16s sequences vs PCR primer sequences
         blast_out_a_df = blast_primers_vs_sequences(primer_file, ass_fasta_a, blast_path)

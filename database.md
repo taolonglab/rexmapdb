@@ -81,16 +81,16 @@ cd ../../
 python3 py/extract.py \
     data/archaea_assembly_summary_filter_2018-05-20.txt \
     data/features/ data/sequences/ \
-    data/16s_from_genomes_2018-05-20.fasta
+    data/16s_from_genomes_archaea_2018-05-20.fasta
 
 python3 py/extract.py \
     data/bacteria_assembly_summary_filter_2018-05-20.txt \
     data/features/ data/sequences/ \
-    data/16s_from_genomes_2018-05-20.fasta
+    data/16s_from_genomes_bacteria_2018-05-20.fasta
 
 ```
 
-The last line will add Bacteria sequences to the existing output FASTA files.
+
 
 ## Generate files for each primer set
 
@@ -113,11 +113,46 @@ The `data/pcr_primers` folder now contains FASTA files for each primer set:
 
 ## Count hypervariable variants
 
+Align primers vs 16S sequences from full genome:
+
 ```sh
 python3 py/count.py \
-    
+    data/16s_from_genomes_archaea_2018-05-20.fasta \
+    data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    data/archaea_assembly_summary_filter_2018-05-20.txt \
+    data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    data/pcr_primers/ \
+    data/ 22 
 ```
 
-## Add RefSeq hypervariable variants
+8th argument can be added with a text pattern if we just want to regenerate files for a specific primer set, e.g.
+```sh
+python3 py/count.py \
+    data/16s_from_genomes_archaea_2018-05-20.fasta \
+    data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    data/archaea_assembly_summary_filter_2018-05-20.txt \
+    data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    data/pcr_primers/ \
+    data/ 22 V3-V4_337F-805R
+```
 
-We go through each strain name from the NCBI RefSeq search results and add sequences if the strain name is not an exact match to something already in the database.
+For each primer set, this will produce:
+* `data/pcr_primers/V3-V4_337F-805R_primers_miss.txt` file which contains assembly IDs that didn't have hit to either forward or reverse (or both) primer in the pair
+* `data/pcr_primers/V3-V4_337F-805R_blast.txt` table with BLAST results
+* `data/16s_from_genomes_2018-05-20_V3-V4_337F-805R_hang22_counts.txt` file which is a table with counts for each hypervariable region
+* `data/V3-V4_337F-805R_hang22_sequences.fasta` which is a FASTA file with hypervariable region sequences
+
+
+## Add RefSeq hypervariable variant sequences
+
+We go through each strain name from the NCBI RefSeq search results and add sequences if the strain name is not an exact match to something already in the database. Do this for each primer set separately (first three arguments are inputs), 4th and 5th are output, last is overhang (use the same as for NCBI Genome in the previous step):
+
+```sh
+python3 py/add_refseq.py \
+    data/16s_from_genomes_2018-05-20_V3-V4_337F-805R_hang22_counts.txt \
+    data/V3-V4_337F-805R_hang22_sequences.fasta \
+    data/pcr_primers/V3-V4_337F-805R.fasta \
+    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
+    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    22
+```

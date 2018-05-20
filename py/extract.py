@@ -171,8 +171,10 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                     # Error reading sequence data, skip it.
                     n_missing_assids += 1
                     continue
-            print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
-                n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids))
+                
+        # Last progress bar after we're done.        
+        print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
+            n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids))
 
             
 
