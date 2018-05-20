@@ -9,7 +9,8 @@ Created on Tue Feb 27 09:15:26 2018
 
 @author: igor
 """
-import sys, subprocess, re
+import sys, subprocess, re, os
+from count import get_os
 
 eutil_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
 search_term = '16s ribosomal RNA[Title] NOT uncultured[Title] AND ' + \
@@ -24,7 +25,12 @@ def detect_curl_path ():
                          stdout=subprocess.PIPE,
                          stderr=subprocess.PIPE)
     out, err = p.communicate()
-    return out.decode().strip()
+    # Check if curl is not found, then use budled binary
+    out = out.decode().strip()
+    if not out:
+        sys_os = get_os()
+        out = os.path.join(os.path.dirname(sys.argv[0]), 'bin', 'curl_'+sys_os)
+    return out
 
 
 def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000,

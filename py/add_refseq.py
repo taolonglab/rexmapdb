@@ -135,14 +135,15 @@ if __name__ == '__main__':
     out_table = os.path.join(os.path.dirname(variant_table), 'V3-V4_341F-805R_hang22_wrefseq_table.txt')
     out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V3-V4_341F-805R_hang22_wrefseq_sequences.fasta')
 
-    variant_table = sys.argv[1]
-    variant_fasta = sys.argv[2]
-    primer_file = sys.argv[3]
-    out_table = sys.argv[4]
-    out_fasta = sys.argv[5]
+    ncbi_fasta = sys.argv[1]
+    variant_table = sys.argv[2]
+    variant_fasta = sys.argv[3]
+    primer_file = sys.argv[4]
+    out_table = sys.argv[5]
+    out_fasta = sys.argv[6]
     
     # overhang = 22
-    overhang = int(sys.argv[6])
+    overhang = int(sys.argv[7])
     seq_min_len = 200
     
     #blast_path='/usr/local/ncbi/blast/bin/blastn'
