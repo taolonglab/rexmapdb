@@ -128,31 +128,7 @@ def seq_to_basic_code (x):
 #%% Main function
 if __name__ == '__main__':
     
-    # ncbi_fasta = '/Users/igor/cloud/research/microbiome/16s/data/16s_rrna_refseq_2017-07-26.fasta'
-    # ncbi_fasta = '/Users/igor/cloud/research/microbiome/genomes/data/16s_fullgen_ncbi_bact_arch_2018-02-23.fasta'
     ncbi_fasta = '/Users/igor/cloud/research/microbiome/genomes/data/16s_rrna_ncbi_search_refseq_2018-03-19.fasta'
-    
-#   variant_table = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/16s_from_genomes_2018-02-23_V3-V4_337F-805R_hang21_counts.txt')
-#   variant_fasta = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_337F-805R_hang21_sequences.fasta')
-#   primer_file = '/Users/igor/cloud/research/microbiome/genomes/data/pcr_primers/V3-V4_337F-805R.fasta'
-#    
-#   variant_table = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/16s_from_genomes_2018-02-23_V4-V5-2_515F-926R_hang22_counts.txt')
-#   variant_fasta = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/V4-V5-2_515F-926R_hang22_sequences.fasta')
-#   primer_file = '/Users/igor/cloud/research/microbiome/genomes/data/pcr_primers/V4-V5-2_515F-926R.fasta'
-
-#    variant_table = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/16s_from_genomes_2018-02-23_V4_515F-805R_hang22_counts.txt')
-#    variant_fasta = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db/V4_515F-805R_hang22_sequences.fasta')
-#    primer_file = '/Users/igor/cloud/research/microbiome/genomes/data/pcr_primers/V4_515F-805R.fasta'
-    
-#    out_table = os.path.join(os.path.dirname(variant_table), 'V3-V4_337F-805R_hang21_wrefseq_table.txt')
-#    out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V3-V4_337F-805R_hang21_wrefseq_sequences.fasta')
-#
-#    out_table = os.path.join(os.path.dirname(variant_table), 'V4-V5-2_515F-926R_hang22_wrefseq_table.txt')
-#    out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V4-V5-2_515F-926R_hang22_wrefseq_sequences.fasta')
-
-#    out_table = os.path.join(os.path.dirname(variant_table), 'V4_515F-805R_hang22_wrefseq_table.txt')
-#    out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V4_515F-805R_hang22_wrefseq_sequences.fasta')
-
     variant_table = '/Users/igor/cloud/research/microbiome/genomes/data/vregions_db/16s_from_genomes_2018-02-23_V3-V4_341F-805R_hang22_counts.txt'
     variant_fasta = '/Users/igor/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_341F-805R_hang22_sequences.fasta'
     primer_file = '/Users/igor/cloud/research/microbiome/genomes/data/pcr_primers/V3-V4_341F-805R.fasta'
@@ -167,12 +143,15 @@ if __name__ == '__main__':
     
     # overhang = 22
     overhang = int(sys.argv[6])
+    seq_min_len = 200
     
     #blast_path='/usr/local/ncbi/blast/bin/blastn'
     blast_path = get_blast_path()
     
+    print('Add RefSeq sequences.')
     print('- load NCBI 16S search FASTA...', end='')
-    ncbi16s_dict = fasta_to_dict(ncbi_fasta, post_process='strain_name_from_refseq_string', post_process_seq='seq_to_basic_code')
+    ncbi16s_dict = fasta_to_dict(ncbi_fasta, post_process='strain_name_from_refseq_string', 
+                                 post_process_seq='seq_to_basic_code')
     print('OK.')
 
     # Now load full genome table and check which strains are new
@@ -255,7 +234,9 @@ if __name__ == '__main__':
     with open(out_fasta, 'w') as out_f:
         for i in range(0, len(vartab_all_df)):
             r = vartab_all_df.iloc[i]
-            out_f.write('>'+r['strain_name']+'\n'+r['sequence']+'\n')
+            # If the sequence is too short, omit it.
+            if len(r['sequence']) >= seq_min_len:
+                out_f.write('>'+r['strain_name']+'\n'+r['sequence']+'\n')
 
     # For each new sequence check if its exact match to any reference, if yes
     # just add it under the same variant_id.
