@@ -1,4 +1,0 @@
-bin/blastn_macos filter=lfs diff=lfs merge=lfs binary
-bin/makeblastdb_linux filter=lfs diff=lfs merge=lfs binary
-bin/makeblastdb_macos filter=lfs diff=lfs merge=lfs binary
-bin/blastn_linux filter=lfs diff=lfs merge=lfs binary
