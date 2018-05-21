@@ -1,8 +1,8 @@
 # HiMAP database
 
 These notes describe how to construct a HiMAP database from scratch. It follows the process from the manuscript:
-![HiMAP database](images/Fig1A.png)
 
+![HiMAP database](images/Fig1A.png)
 
 
 First, clone the repository:
@@ -218,23 +218,9 @@ The location of HiMAP installation can be found in the command line:
 Rscript --vanilla -e "cat(find.package('himap'), fill=T)"
 ```
 
-the output on macOS is typically along the lines of `/Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap`.
-
-
-
-
-
-## Download latest database 
-
-If we make database update through Github, we might use too much bandwidth?
-
+the output on macOS is typically along the lines of `/Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap`. Then we can just copy the files:
 
 ```sh
--H 'Accept: application/vnd.github.v3.raw' \
-  
-
-
-curl \
-  -H 'Authorization: token 99f22e14f4ed6ec6899bebe79dbf6fd7fbf9bac6' \
-  -L 'https://api.github.com/repos/taolonglab/himap/contents/inst/database/'
+cp database/*.* /Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap/database
 ```
+
