@@ -1,7 +1,7 @@
 # HiMAP database
 
 These notes describe how to construct a HiMAP database from scratch. It follows the process from the manuscript:
-![HiMAP database](img/Fig1A.png)
+![HiMAP database](images/Fig1A.png)
 
 
 
