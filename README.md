@@ -51,7 +51,7 @@ python3 py/dl_genome_meta.py data/ archaea,bacteria
 
 ## Download data
 
-Now, download the sequences. This will be a large download and make take a day or so to complete.
+Now, download the sequences. This will be a large download and may take a day or so to complete.
 ```sh
 mkdir data/sequences
 mkdir data/features
@@ -65,7 +65,7 @@ python3 ../../py/download.py ../archaea_assembly_sequences_urls.txt 10
 python3 ../../py/download.py ../bacteria_assembly_sequences_urls.txt 10
 ```
 
-where the second argument specifies the number of concurrent download connections to speed up the download. Increasing number of connections can speed up the download significantly but also lead to some failed downloads (files with size 0). These can be re-downloaded, but deleting them and re-running the script with 1 concurrent download option. 
+where the second argument specifies the number of concurrent download connections to speed up the download. Increasing number of connections can speed up the download significantly but also lead to some failed downloads (files with size 0). These can be re-downloaded, by deleting them and re-running the script with 1 concurrent download option. The download script will skip re-downloading any existing files.
 
 For example to re-download missing sequences, run this from the `sequences` folder:
 
