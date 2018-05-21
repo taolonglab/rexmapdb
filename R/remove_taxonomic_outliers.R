@@ -1,15 +1,15 @@
-# Check which sequences in HiMAP db have multiple phyla
+# Check which sequences in HiMAP db have multiple ranks
 # and remove them (usually very small number of strains.)
-#
+# if they are < 1% in that rank.
 
 library(himap)
-# Load all from himap
 library(data.table)
 
 # Input and output file (gets overwritten)
 args = commandArgs(trailingOnly=TRUE)
 ref_filename = args[1]
 out_filename = args[2]
+out_exclusions = args[3]
 
 # Load V3-V4 reference copy table
 # ref_filename = system.file(
@@ -18,11 +18,11 @@ out_filename = args[2]
 #       package='himap'
 #    )
 
-ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants.txt'
-ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V4_515F-805R_hang22_wrefseq_table_unique_variants.txt'
-
-out_filename = '~/cloud/research/microbiome/himap/inst/database/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants_R.txt'
-out_filename = '~/cloud/research/microbiome/himap/inst/database/V4_515F-805R_hang22_wrefseq_table_unique_variants_R.txt'
+# ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants.txt'
+# ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V4_515F-805R_hang22_wrefseq_table_unique_variants.txt'
+#
+# out_filename = '~/cloud/research/microbiome/himap/inst/database/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants_R.txt'
+# out_filename = '~/cloud/research/microbiome/himap/inst/database/V4_515F-805R_hang22_wrefseq_table_unique_variants_R.txt'
 
 
 ref.dt = fread(ref_filename, colClasses=c('character', 'character', 'integer',
@@ -152,11 +152,10 @@ excl.dt = unique(data.table(
 ))
 setorder(excl.dt, reason, strain)
 
-write.table(
-  excl.dt,
-  '~/cloud/research/microbiome/genomes/excluded_strains_from_himap_database_v4.txt',
-  sep='\t', quote=F, row.names=F)
+#------------------- WRITE DATA -----------------------------------
+# Write table with excluded strains
+write.table(excl.dt, out_exclusions, sep='\t', quote=F, row.names=F)
 
+# Write fixed reference table with copy numbers
 ref_fix.dt = ref.dt[!(strain_name_norrn %in% strain_names), 1:3]
-
-write_table(ref_fix.dt, out_filename)
+write_table(ref_fix.dt, out_filename, sep='\t', quote=F, row.names=F)

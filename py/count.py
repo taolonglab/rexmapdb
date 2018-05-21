@@ -44,8 +44,13 @@ def get_os ():
 
 def get_blast_path ():
     """ Generate an absolute BLAST path. """
-    sys_os = get_os()
-    return os.path.join(os.path.dirname(sys.path[0]), 'bin', 'blastn_'+sys_os)
+    blastn = Popen('which blastn', shell=True, stdout=PIPE, stderr=PIPE)
+    out, err = blastn.communicate()
+    if out == b'':
+        sys_os = get_os()
+        return os.path.join(os.path.dirname(sys.path[0]), 'bin', 'blastn_'+sys_os)
+    else:
+        return out.decode().strip()
 
 
 def fasta_to_df (input_fa):

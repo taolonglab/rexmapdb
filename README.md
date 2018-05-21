@@ -1,12 +1,18 @@
 # HiMAP database
 
-These notes describe how to construct a HiMAP database from scratch. First, clone the repository:
+These notes describe how to construct a HiMAP database from scratch. It follows the process from the manuscript:
+![HiMAP database](img/Fig1A.png)
+
+
+
+First, clone the repository:
 ```sh
 git clone https://github.com/taolonglab/himapdb.git
 cd himapdb
 ```
 
 To run these scripts you need:
+* HiMAP installed: https://github.com/taolonglab/himap
 * Python 3, with modules Biopython and Pandas installed
 
 
@@ -148,7 +154,7 @@ For each primer set, this will produce:
 Now, we want to merge these genome assembly sequences with strains that do not have full genome information. We first query NCBI RefSeq database for 16S sequences (in 10K chunks) and download them to a FASTA file `data/16S_RefSeq_2018-05-20.fasta`:
 
 ```sh
-python3 py/dl_refseq.py data/16S_RefSeq_2018-05-20.fasta
+python3 py/dl_refseq.py data/16s_RefSeq_2018-05-20.fasta
 ```
 
 
@@ -177,9 +183,58 @@ python3 py/add_refseq.py \
 
 This will add any missing strains to both the FASTA file and the count table (RefSeq sequences will have copy number set to 1).
 
+## Remove taxonomic outliers
+
+Sometimes, there will be one or very few strains with sequence (e.g. _Bacillus cereus_ BC04) that is identical to strains from completely different phylum (e.g. Escherichia coli). These look like errors either in assembly or taxonomic assignment and usually contribute <= 1% to that phylum. In this example _B. cereus_ BC04 is the only strain from Firmicutes phylum that has an exact same sequence as thousands of strains from Proteobacteria phylum: _Escherichia_, _Shigella_ etc. We repeated this process for Phylum, Class, Order and Family ranks.
+
+Let's also put the final files in the new `database` folder. The contents of this folder can be copied directly into the HiMAP database folder (we will explain shortly how to find it).
+
+```sh
+mkdir database
+
+Rscript --vanilla R/remove_taxonomic_outliers.R \
+    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
+    database/V3-V4_337F-805R_hang22_wrefseq_table_R.txt \
+    data/V3-V4_337F-805R_excluded_outlier_strains.txt
+```
+
+The removed strains are saved in `data/V3-V4_337F-805R_excluded_outlier_strains.txt`
+
+
 ## Generate BLAST database
 
 ```sh
-python3 py/make_blast_db.py
+python3 py/makeblastdb.py \
+    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    database/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants
 
+```
+
+
+## Copy files to HiMAP package folder
+
+The location of HiMAP installation can be found in the command line:
+```sh
+Rscript --vanilla -e "cat(find.package('himap'), fill=T)"
+```
+
+the output on macOS is typically along the lines of `/Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap`.
+
+
+
+
+
+## Download latest database 
+
+If we make database update through Github, we might use too much bandwidth?
+
+
+```sh
+-H 'Accept: application/vnd.github.v3.raw' \
+  
+
+
+curl \
+  -H 'Authorization: token 99f22e14f4ed6ec6899bebe79dbf6fd7fbf9bac6' \
+  -L 'https://api.github.com/repos/taolonglab/himap/contents/inst/database/'
 ```
