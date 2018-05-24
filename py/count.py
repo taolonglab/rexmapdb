@@ -172,7 +172,7 @@ def blast_out_vregion (df, overhang=0):
 def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, 
          primer_dir, fasta_out_dir, 
          blast_path='/usr/local/ncbi/blast/bin/blastn', overhang=21, 
-         primer_file_filter='V'):
+         min_len=200, primer_file_filter='V'):
     
     print('Count 16S hypervariable regions')
     # Load full genome assembly 16S sequences
@@ -180,7 +180,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     # If we want to process only specific primer set add it here as a string
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
-    
+    print('* Global minimum tag length:', str(min_len), 'nt')
     print('* Load files: ', end='')
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
@@ -265,7 +265,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
         # Generate a dictionary {assid1: {seq1: count1, seq2: count2}, assid2...}
         assid_to_vreg_dict = {}
         for meta, seq in ass_to_vreg_dict.items():
-            if seq == '': # Empty sequence
+            if seq == '' or len(seq) < min_len: # Empty sequence
                 continue
             assid = meta.split(';')[0]
             if assid not in assid_to_vreg_dict:
@@ -317,17 +317,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
                 
 #%% do this if script is ran from comamnd line
 if __name__ == '__main__':
-    #%% fasta processor
-    # ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, fasta_out_dir
-    ass_fasta_a = os.path.expanduser('~/cloud/research/microbiome/genomes/data/16s_from_genomes_archaea_2018-02-23.fasta')
-    ass_fasta_b = os.path.expanduser('~/cloud/research/microbiome/genomes/data/16s_from_genomes_bacteria_2018-02-23.fasta')
-    assembly_file_a = os.path.expanduser('~/cloud/research/microbiome/genomes/data/archaea_assembly_summary_filter_2018-02-23.txt')
-    assembly_file_b = os.path.expanduser('~/cloud/research/microbiome/genomes/data/bacteria_assembly_summary_filter_2018-02-23.txt')
-    primer_dir = os.path.expanduser('~/cloud/research/microbiome/genomes/data/pcr_primers')
-    fasta_out_dir = os.path.expanduser('~/cloud/research/microbiome/genomes/data/vregions_db')
-    #assembly_file_a = ''
-    #assembly_file_b = ''
-    
+
     ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
     ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
     assembly_file_a = sys.argv[3]   # Assembly summary filtered for archaea
@@ -335,15 +325,21 @@ if __name__ == '__main__':
     primer_dir = sys.argv[5]        # Folder with FASTA files for PCR primers
     fasta_out_dir = sys.argv[6]     # Output folder for the final FASTA and table
     
-    if len(sys.argv) >= 8:          # Argument 8 is overhang
+    if len(sys.argv) >= 8:          # Argument 7 is overhang
         overhang = sys.argv[7]
     else:
         overhang = 0
-    if len(sys.argv) >= 9:          # Argument 9 is text filter for hypervariable region
-        filter = sys.argv[8]
+    
+    if len(sys.argv) >= 9:          # Argument 8 is minimum acceptable tag length
+        min_len = int(sys.argv[8])       # after primer alignment.
+    else:
+        min_len = 200
+    
+    if len(sys.argv) >= 10:          # Argument 9 is text filter for hypervariable region
+        filter = sys.argv[9]
     else:
         filter = 'V'
     
     main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, 
-         fasta_out_dir, blast_path = get_blast_path(),
+         fasta_out_dir, blast_path = get_blast_path(), min_len=min_len,
          overhang=overhang, primer_file_filter=filter)

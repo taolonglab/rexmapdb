@@ -139,8 +139,18 @@ python3 py/count.py \
     data/archaea_assembly_summary_filter_2018-05-20.txt \
     data/bacteria_assembly_summary_filter_2018-05-20.txt \
     data/pcr_primers/ \
-    data/ 22 V3-V4_337F-805R
+    data/ 22 200 V4_515F-805R
+
+python3 py/count.py \
+    data/16s_from_genomes_archaea_2018-05-20.fasta \
+    data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    data/archaea_assembly_summary_filter_2018-05-20.txt \
+    data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    data/pcr_primers/ \
+    data/ 22 400 V3-V4_337F-805R
 ```
+
+where we also specified the minimum length for sequences between primers, for each primer pair (200 nt for V4 and 400 nt for V3-V4).
 
 For each primer set, this will produce:
 * `data/pcr_primers/V3-V4_337F-805R_primers_miss.txt` file which contains assembly IDs that didn't have hit to either forward or reverse (or both) primer in the pair
@@ -148,6 +158,7 @@ For each primer set, this will produce:
 * `data/16s_from_genomes_2018-05-20_V3-V4_337F-805R_hang22_counts.txt` file which is a table with counts for each hypervariable region
 * `data/V3-V4_337F-805R_hang22_sequences.fasta` which is a FASTA file with hypervariable region sequences
 
+From this point on we will process only V3-V4 primers, but the same can be done for V4 by replacing V3-V4_337F-805R with V4_515F-805R everywhere.
 
 ## Download NCBI RefSeq 16S rRNA gene sequences
 
