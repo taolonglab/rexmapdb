@@ -221,7 +221,8 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     for primer_file in primer_files:
         
         print('* Primer FASTA: '+primer_file)
-        print('* Assembly FASTA: '+ass_fasta_a)
+        print('* Assembly FASTA (Archaea): '+ass_fasta_a)
+        print('* Assembly FASTA (Bacteria): '+ass_fasta_b)
         print('\r* '+os.path.splitext(os.path.basename(primer_file))[0]+': blast...', end='')
         # Run BLAST with 16s sequences vs PCR primer sequences
         blast_out_a_df = blast_primers_vs_sequences(primer_file, ass_fasta_a, blast_path)

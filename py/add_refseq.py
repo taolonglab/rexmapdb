@@ -150,13 +150,13 @@ if __name__ == '__main__':
     blast_path = get_blast_path()
     
     print('Add RefSeq sequences.')
-    print('- load NCBI 16S search FASTA...', end='')
+    print('* Load NCBI 16S search FASTA...', end='')
     ncbi16s_dict = fasta_to_dict(ncbi_fasta, post_process='strain_name_from_refseq_string', 
                                  post_process_seq='seq_to_basic_code')
     print('OK.')
 
     # Now load full genome table and check which strains are new
-    print('- load full genome variant table...', end='')
+    print('* Load full genome variant table...', end='')
     vartab_df = pd.read_csv(variant_table, sep='\t')
     print('OK.')
     fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['strain_name']])
@@ -164,6 +164,7 @@ if __name__ == '__main__':
     # For each strain from RefSeq search check first if the strain name exist
     # if it does, just skip it. If it does not exist, check if the sequence
     # after PCR primer trimming exist in the database.
+    print('* Checking for existing strains...', end='')
     ncbi16s_new_dict = {k:v for k, v in ncbi16s_dict.items() if k not in fullgen_strains }
     # del ncbi16_dict
     ncbi_fasta_reduced = os.path.splitext(os.path.basename(ncbi_fasta))[0] + \
@@ -171,16 +172,19 @@ if __name__ == '__main__':
     with open(ncbi_fasta_reduced, 'w') as f_out:
         for meta, [id, seq] in ncbi16s_new_dict.items():
             f_out.write('>'+meta+'\n'+seq+'\n')
-            
+    print('OK.')
     
     # Now we obtained the reduced dictionary but with full length sequences. We
     # will need to do BLAST alignment to extract V3-V4 region, where it exists.
+    print('* BLAST primers vs RefSeq sequences...', end='')
     blast_out = blast_primers_vs_sequences(primer_file, ncbi_fasta_reduced, blast_path)
     os.remove(ncbi_fasta_reduced) # Cleanup temp file
+    print('OK.')
     # Pickle these results to save progress
-    with open('/Users/igor/cloud/research/microbiome/genomes/data/blast_out.pickle', 'wb') as b_out:
-        pickle.dump(blast_out, b_out)
+    # with open('/Users/igor/cloud/research/microbiome/genomes/data/blast_out.pickle', 'wb') as b_out:
+    #     pickle.dump(blast_out, b_out)
 
+    print('* Selecting best primer hits...', end='')
     blast_out[13] = 'Forward'
     blast_out.loc[blast_out[1].str.startswith('Reverse'), 13] = 'Reverse'
 
@@ -190,8 +194,10 @@ if __name__ == '__main__':
     blast_out_best2.columns = ['strain_name', 'primer', 'pct_sim', 'aln_len', 'mismatches',
                                'gapopen', 'seq_start', 'seq_end', 'pr_start',
                                'pr_end', 'eval', 'bitscore', 'score', 'pr_type']
+    print('OK.')
 
     # Generate reference between strain names and NCBI RefSeq IDs
+    print('* Generating strain names and RefSeq IDs...', end='')
     id_vs_strain_df = pd.DataFrame(list(ncbi16s_new_dict.keys()))
     id_vs_strain_df.columns = ['strain_name']
     id_vs_strain_df['id'] = [id for k, [id, s] in ncbi16s_new_dict.items()]
@@ -203,11 +209,13 @@ if __name__ == '__main__':
     vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['strain_name']==strain, 
         'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
     vartab_ncbi_df.columns = ['assembly_id', 'strain_name', 'count', 'sequence']
+    print('OK.')
     
-    with open('/Users/igor/cloud/research/microbiome/genomes/data/vartab_ncbi_df.pickle', 'wb') as out:
-        pickle.dump(vartab_ncbi_df, out)
+    # with open('/Users/igor/cloud/research/microbiome/genomes/data/vartab_ncbi_df.pickle', 'wb') as out:
+    #    pickle.dump(vartab_ncbi_df, out)
     
     # Filter out useless strain entries
+    print('* Filtering out unidentified strains...', end='')
     vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Bacterium')]
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[B|b]acteria')]
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Unidentified')]
@@ -225,19 +233,23 @@ if __name__ == '__main__':
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Fe-oxidizing')]
     # Final table
     vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True)
+    print('OK.')
 
     # Save new table
+    print('* Saving table...', end='')
     vartab_all_df.to_csv(out_table, sep='\t', index=False)
-    
+    print('OK.')
     # Save intermediate files in case we need them for debugging
     
     # Save sequences to new fasta
+    print('* Saving FASTA...', end='')
     with open(out_fasta, 'w') as out_f:
         for i in range(0, len(vartab_all_df)):
             r = vartab_all_df.iloc[i]
             # If the sequence is too short, omit it.
             if len(r['sequence']) >= seq_min_len:
                 out_f.write('>'+r['strain_name']+'\n'+r['sequence']+'\n')
-
+    print('OK.')
     # For each new sequence check if its exact match to any reference, if yes
     # just add it under the same variant_id.
+    print('Done.')
