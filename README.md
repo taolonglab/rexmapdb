@@ -189,10 +189,23 @@ python3 py/add_refseq.py \
     data/pcr_primers/V3-V4_337F-805R.fasta \
     data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
     data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
-    22
+    22 400
 ```
 
 This will add any missing strains to both the FASTA file and the count table (RefSeq sequences will have copy number set to 1).
+
+## Group unique sequences
+
+Now, many strains will have the exact same sequence. We want to group strain names for each unique sequence (variant).
+
+```sh
+python3 py/group.py \
+    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
+    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
+    data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta
+```
+
 
 ## Remove taxonomic outliers
 
@@ -216,7 +229,7 @@ The removed strains are saved in `data/V3-V4_337F-805R_excluded_outlier_strains.
 
 ```sh
 python3 py/makeblastdb.py \
-    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta \
     database/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants
 
 ```

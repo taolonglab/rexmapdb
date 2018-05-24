@@ -128,13 +128,6 @@ def seq_to_basic_code (x):
 #%% Main function
 if __name__ == '__main__':
     
-    ncbi_fasta = '/Users/igor/cloud/research/microbiome/genomes/data/16s_rrna_ncbi_search_refseq_2018-03-19.fasta'
-    variant_table = '/Users/igor/cloud/research/microbiome/genomes/data/vregions_db/16s_from_genomes_2018-02-23_V3-V4_341F-805R_hang22_counts.txt'
-    variant_fasta = '/Users/igor/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_341F-805R_hang22_sequences.fasta'
-    primer_file = '/Users/igor/cloud/research/microbiome/genomes/data/pcr_primers/V3-V4_341F-805R.fasta'
-    out_table = os.path.join(os.path.dirname(variant_table), 'V3-V4_341F-805R_hang22_wrefseq_table.txt')
-    out_fasta = os.path.join(os.path.dirname(variant_fasta), 'V3-V4_341F-805R_hang22_wrefseq_sequences.fasta')
-
     ncbi_fasta = sys.argv[1]
     variant_table = sys.argv[2]
     variant_fasta = sys.argv[3]
@@ -144,9 +137,8 @@ if __name__ == '__main__':
     
     # overhang = 22
     overhang = int(sys.argv[7])
-    seq_min_len = 200
+    seq_min_len = int(sys.argv[8])
     
-    #blast_path='/usr/local/ncbi/blast/bin/blastn'
     blast_path = get_blast_path()
     
     print('Add RefSeq sequences.')
@@ -158,7 +150,7 @@ if __name__ == '__main__':
     # Now load full genome table and check which strains are new
     print('* Load full genome variant table...', end='')
     vartab_df = pd.read_csv(variant_table, sep='\t')
-    print('OK.')
+    print('OK. (', str(len(vartab_df)), 'rows)')
     fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['strain_name']])
 
     # For each strain from RefSeq search check first if the strain name exist
@@ -180,9 +172,6 @@ if __name__ == '__main__':
     blast_out = blast_primers_vs_sequences(primer_file, ncbi_fasta_reduced, blast_path)
     os.remove(ncbi_fasta_reduced) # Cleanup temp file
     print('OK.')
-    # Pickle these results to save progress
-    # with open('/Users/igor/cloud/research/microbiome/genomes/data/blast_out.pickle', 'wb') as b_out:
-    #     pickle.dump(blast_out, b_out)
 
     print('* Selecting best primer hits...', end='')
     blast_out[13] = 'Forward'
@@ -210,10 +199,7 @@ if __name__ == '__main__':
         'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
     vartab_ncbi_df.columns = ['assembly_id', 'strain_name', 'count', 'sequence']
     print('OK.')
-    
-    # with open('/Users/igor/cloud/research/microbiome/genomes/data/vartab_ncbi_df.pickle', 'wb') as out:
-    #    pickle.dump(vartab_ncbi_df, out)
-    
+        
     # Filter out useless strain entries
     print('* Filtering out unidentified strains...', end='')
     vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Bacterium')]
@@ -233,12 +219,12 @@ if __name__ == '__main__':
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Fe-oxidizing')]
     # Final table
     vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True)
-    print('OK.')
+    print('OK. (Combined: ', str(len(vartab_all_df)), 'rows)')
 
     # Save new table
     print('* Saving table...', end='')
     vartab_all_df.to_csv(out_table, sep='\t', index=False)
-    print('OK.')
+    print('OK. (', str(len(vartab_all_df)), 'rows)')
     # Save intermediate files in case we need them for debugging
     
     # Save sequences to new fasta

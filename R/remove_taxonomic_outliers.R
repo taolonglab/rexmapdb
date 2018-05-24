@@ -158,4 +158,4 @@ write.table(excl.dt, out_exclusions, sep='\t', quote=F, row.names=F)
 
 # Write fixed reference table with copy numbers
 ref_fix.dt = ref.dt[!(strain_name_norrn %in% strain_names), 1:3]
-write_table(ref_fix.dt, out_filename, sep='\t', quote=F, row.names=F)
+write_table(ref_fix.dt, out_filename, sep='\t')
