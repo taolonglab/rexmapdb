@@ -36,7 +36,7 @@ def detect_curl_path (debug=False):
     return out
 
 
-def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000,
+def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000, debug=False,
          eutil_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/',
          search_term = '16s ribosomal RNA[Title] NOT uncultured[Title] AND ' + \
               '(bacteria[Filter] OR archaea[Filter]) AND ' + \
@@ -49,7 +49,7 @@ def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000,
     if curl_path is None:
         if verbose:
             print('- detecting curl...', end='')
-        curl_path = detect_curl_path()
+        curl_path = detect_curl_path(debug=debug)
         if verbose:
             print('OK.')
     if verbose:
@@ -108,4 +108,9 @@ def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000,
 if __name__ == '__main__':
     
     fasta_out_path = sys.argv[1]
+    
+    if len(sys.argv) >= 3:          # Argument 7 is overhang
+        debug = True
+    else:
+        debug = False
     main(fasta_out_path)
