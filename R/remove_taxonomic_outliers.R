@@ -11,18 +11,9 @@ ref_filename = args[1]
 out_filename = args[2]
 out_exclusions = args[3]
 
-# Load V3-V4 reference copy table
-# ref_filename = system.file(
-#       'database',
-#       himap_option('blast_dbs')[Hypervariable_region=='V4', table],
-#       package='himap'
-#    )
+cov_pct_th = 99
 
-# ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants.txt'
-# ref_filename = '~/cloud/research/microbiome/genomes/data/vregions_db/V4_515F-805R_hang22_wrefseq_table_unique_variants.txt'
-#
-# out_filename = '~/cloud/research/microbiome/himap/inst/database/V3-V4_337F-805R_hang21_wrefseq_table_unique_variants_R.txt'
-# out_filename = '~/cloud/research/microbiome/himap/inst/database/V4_515F-805R_hang22_wrefseq_table_unique_variants_R.txt'
+
 
 
 ref.dt = fread(ref_filename, colClasses=c('character', 'character', 'integer',
@@ -69,8 +60,8 @@ multi_phyla_weird.dt = multi_phyla.dt[, {
         'coverage_pct'=100*unname(ft[1])/sum(ft))
 }, by=variant_id]
 
-variant_ids_fix = multi_phyla_weird.dt[coverage_pct>=99, variant_id]
-major_phyla_fix = multi_phyla_weird.dt[coverage_pct>=99, major_phylum]
+variant_ids_fix = multi_phyla_weird.dt[coverage_pct>=cov_pct_th, variant_id]
+major_phyla_fix = multi_phyla_weird.dt[coverage_pct>=cov_pct_th, major_phylum]
 strain_names_phylum = sub('_@rrn[0-9]+', '', unname(unlist(mapply(function (phy, vid) {
    ref_tax.dt[!(strain_name_norrn %in% strain_names) & phylum != phy & variant_id == vid, strain_name]
 }, major_phyla_fix, variant_ids_fix))))
@@ -87,8 +78,8 @@ multi_class_weird.dt = multi_class.dt[, {
         'total'=sum(ft),
         'coverage_pct'=100*unname(ft[1])/sum(ft))
 }, by=variant_id]
-variant_ids_fix_class = multi_class_weird.dt[coverage_pct>=99, variant_id]
-major_class_fix = multi_class_weird.dt[coverage_pct>=99, major_class]
+variant_ids_fix_class = multi_class_weird.dt[coverage_pct>=cov_pct_th, variant_id]
+major_class_fix = multi_class_weird.dt[coverage_pct>=cov_pct_th, major_class]
 strain_names_class = sub('_@rrn[0-9]+', '', unname(unlist(mapply(function (cls, vid) {
    ref_tax.dt[!(strain_name_norrn %in% strain_names) & class != cls &
                 variant_id == vid, strain_name]
@@ -106,8 +97,8 @@ multi_order_weird.dt = multi_order.dt[, {
         'total'=sum(ft),
         'coverage_pct'=100*unname(ft[1])/sum(ft))
 }, by=variant_id]
-variant_ids_fix_order = multi_order_weird.dt[coverage_pct>=99, variant_id]
-major_order_fix = multi_order_weird.dt[coverage_pct>=99, major_order]
+variant_ids_fix_order = multi_order_weird.dt[coverage_pct>=cov_pct_th, variant_id]
+major_order_fix = multi_order_weird.dt[coverage_pct>=cov_pct_th, major_order]
 strain_names_order = sub('_@rrn[0-9]+', '', unname(unlist(mapply(function (cls, vid) {
    ref_tax.dt[!(strain_name_norrn %in% strain_names) & order != cls &
                 variant_id == vid, strain_name]
@@ -125,8 +116,8 @@ multi_family_weird.dt = multi_family.dt[, {
         'total'=sum(ft),
         'coverage_pct'=100*unname(ft[1])/sum(ft))
 }, by=variant_id]
-variant_ids_fix_family = multi_family_weird.dt[coverage_pct>=99, variant_id]
-major_family_fix = multi_family_weird.dt[coverage_pct>=99, major_family]
+variant_ids_fix_family = multi_family_weird.dt[coverage_pct>=cov_pct_th, variant_id]
+major_family_fix = multi_family_weird.dt[coverage_pct>=cov_pct_th, major_family]
 strain_names_family = sub('_@rrn[0-9]+', '', unname(unlist(mapply(function (cls, vid) {
    ref_tax.dt[!(strain_name_norrn %in% strain_names) & family != cls &
                 variant_id == vid, strain_name]

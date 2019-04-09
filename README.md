@@ -217,8 +217,8 @@ Let's also put the final files in the new `database` folder. The contents of thi
 mkdir database
 
 Rscript --vanilla R/remove_taxonomic_outliers.R \
-    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
-    database/V3-V4_337F-805R_hang22_wrefseq_table_R.txt \
+    data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
+    database/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants_R.txt \
     data/V3-V4_337F-805R_excluded_outlier_strains.txt
 ```
 

@@ -18,7 +18,7 @@ search_term = '16s ribosomal RNA[Title] NOT uncultured[Title] AND ' + \
               '(1000[SLEN] : 2000[SLEN]) AND refseq[filter]'
 
 
-def detect_curl_path ():
+def detect_curl_path (debug=False):
     """ Automatically detect curl path
     usually curl_path = '/usr/bin/curl' """
     p = subprocess.Popen('which curl', shell=True,
@@ -27,9 +27,12 @@ def detect_curl_path ():
     out, err = p.communicate()
     # Check if curl is not found, then use budled binary
     out = out.decode().strip()
-    if not out:
+    if not out or debug:
         sys_os = get_os()
-        out = os.path.join(os.path.dirname(sys.argv[0]), 'bin', 'curl_'+sys_os)
+        out = os.path.join(
+                os.path.dirname(os.path.dirname(sys.argv[0])), 
+                'bin', 'curl_'+sys_os
+                )
     return out
 
 
