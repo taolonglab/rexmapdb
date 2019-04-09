@@ -52,6 +52,8 @@ def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000, debug=False
         curl_path = detect_curl_path(debug=debug)
         if verbose:
             print('OK.')
+    if debug:
+        print('- Debug mode: ON')
     if verbose:
         print('- using '+curl_path+' for web queries')
         print('- sending search query...', end='')
