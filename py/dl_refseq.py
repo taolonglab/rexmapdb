@@ -113,4 +113,4 @@ if __name__ == '__main__':
         debug = True
     else:
         debug = False
-    main(fasta_out_path)
+    main(fasta_out_path, debug=debug)
