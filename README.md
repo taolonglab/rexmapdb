@@ -1,18 +1,18 @@
-# HiMAP database
+# RExMap database
 
-These notes describe how to construct a HiMAP database from scratch. It follows the process from the manuscript:
+These notes describe how to construct a RExMap database from scratch. It follows this process:
 
-![HiMAP database](images/Fig1A.png)
+![RExMap database](images/Fig1A.png)
 
 
 First, clone the repository:
 ```sh
-git clone https://github.com/taolonglab/himapdb.git
-cd himapdb
+git clone https://github.com/taolonglab/rexmapdb.git
+cd rexmapdb
 ```
 
 To run these scripts you need:
-* HiMAP installed: https://github.com/taolonglab/himap
+* RExMap installed: https://github.com/taolonglab/rexmap
 * Python 3, with modules Biopython and Pandas installed
 
 
@@ -79,7 +79,7 @@ while some downloads will always result in 0 size files (next script will just s
 
 ## Extract 16S sequences from full genomes
 
-Extract 16S ribosomal RNA gene sequences from FASTA sequences, based on their GFF annotations. No need to uncompress anything. Switch back to the `himapdb` folder and run `extract.py`. This script takes 3 inputs: (i) filtered assembly summary file, (ii) folder with downloaded GFF features and (iii) folder with downloaded sequences. The last argument is the output FASTA file:
+Extract 16S ribosomal RNA gene sequences from FASTA sequences, based on their GFF annotations. No need to uncompress anything. Switch back to the `rexmapdb` folder and run `extract.py`. This script takes 3 inputs: (i) filtered assembly summary file, (ii) folder with downloaded GFF features and (iii) folder with downloaded sequences. The last argument is the output FASTA file:
 
 ```sh
 cd ../../
@@ -211,7 +211,7 @@ python3 py/group.py \
 
 Sometimes, there will be one or very few strains with sequence (e.g. _Bacillus cereus_ BC04) that is identical to strains from completely different phylum (e.g. Escherichia coli). These look like errors either in assembly or taxonomic assignment and usually contribute <= 1% to that phylum. In this example _B. cereus_ BC04 is the only strain from Firmicutes phylum that has an exact same sequence as thousands of strains from Proteobacteria phylum: _Escherichia_, _Shigella_ etc. We repeated this process for Phylum, Class, Order and Family ranks.
 
-Let's also put the final files in the new `database` folder. The contents of this folder can be copied directly into the HiMAP database folder (we will explain shortly how to find it).
+Let's also put the final files in the new `database` folder. The contents of this folder can be copied directly into the RExMap database folder (we will explain shortly how to find it).
 
 ```sh
 mkdir database
@@ -235,16 +235,16 @@ python3 py/makeblastdb.py \
 ```
 
 
-## Copy files to HiMAP package folder
+## Copy files to RExMap package folder
 
-The location of HiMAP installation can be found in the command line:
+The location of RExMap installation can be found in the command line:
 ```sh
-Rscript --vanilla -e "cat(find.package('himap'), fill=T)"
+Rscript --vanilla -e "cat(find.package('rexmap'), fill=T)"
 ```
 
-the output on macOS is typically along the lines of `/Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap`. Then we can just copy the files:
+the output on macOS is typically along the lines of `/Library/Frameworks/R.framework/Versions/3.4/Resources/library/rexmap`. Then we can just copy the files:
 
 ```sh
-cp database/*.* /Library/Frameworks/R.framework/Versions/3.4/Resources/library/himap/database
+cp database/*.* /Library/Frameworks/R.framework/Versions/3.4/Resources/library/rexmap/database
 ```
 
