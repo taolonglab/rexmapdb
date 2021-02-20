@@ -167,7 +167,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                                                      ass_f_sub_sub.iloc[j]['strand'] + delim + 'length:' + \
                                                      str(length) + '\n' + \
                                                      seq + '\n')
-                except EOFError:
+                except:
                     # Error reading sequence data, skip it.
                     n_missing_assids += 1
                     continue
