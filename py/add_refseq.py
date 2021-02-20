@@ -139,7 +139,7 @@ def parse_input():
                         help='Input 16s_RefSeq FASTA file.')
     parser.add_argument('--input-genome-16s-counts', required=True, 
                         help='Input 16s_from_genomes counts table (output from counts.py).')
-    parser.add_argument('--input-genome-16-fasta', required=True, 
+    parser.add_argument('--input-genome-16s-fasta', required=True, 
                         help='Input 16S sequences from genomes FASTA (output from counts.py).')
     parser.add_argument('--input-pcr-primers-fasta', required=True,
                         help='FASTA file with PCR primers used for full genomes in counts.py.')
