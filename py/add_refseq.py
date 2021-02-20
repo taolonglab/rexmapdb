@@ -11,11 +11,15 @@ Created on Tue Feb 27 16:24:07 2018
 """
 
 #%% FASTA processor
-import os, sys, re, pickle
+import argparse
+import os, sys, re
 # from subprocess import Popen, PIPE
 # from io import StringIO
 import pandas as pd
 from count import blast_primers_vs_sequences, blast_out_vregion, get_blast_path
+
+script_title = 'Combine hypervariable regions from full genomes and 1S sequences from NCBI RefSeq search.'
+
 
 def fasta_to_dict (input_fa, keys=None, sep=' ', post_process=None,
                    post_process_seq=None, ignore_duplicates=True,
@@ -125,23 +129,63 @@ def seq_to_basic_code (x):
     return re.sub('[^ACGT]', 'N', x)
 
 
+
+def parse_input():
+    parser = argparse.ArgumentParser(
+        description=script_title,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('--input-nongenome-16s-fasta', required=True, 
+                        help='Input 16s_RefSeq FASTA file.')
+    parser.add_argument('--input-genome-16s-counts', required=True, 
+                        help='Input 16s_from_genomes counts table (output from counts.py).')
+    parser.add_argument('--input-genome-16-fasta', required=True, 
+                        help='Input 16S sequences from genomes FASTA (output from counts.py).')
+    parser.add_argument('--input-pcr-primers-fasta', required=True,
+                        help='FASTA file with PCR primers used for full genomes in counts.py.')
+    parser.add_argument('--output-table', required=True, 
+                        help='Output table with combined counts.')
+    parser.add_argument('--output-fasta', required=True, 
+                        help='Output FASTA with combined sequences.')
+    parser.add_argument('--overhang', required=False, default=0,
+                        help='Extra overhang on both sides of extracted hypervariable regions. Use same value as in counts.py')
+    parser.add_argument('--min-seq-len', required=False, default=200,
+                        help='Minimum allowed hypervariable region sequence length. Use same value as in counts.py')
+    parser.add_argument('--nthreads', required=False, default=4,
+                        help='Number of parallel threads to use in the BLAST step.')
+    args = parser.parse_args()
+    return args
+
+
 #%% Main function
 if __name__ == '__main__':
     
-    ncbi_fasta = sys.argv[1]
-    variant_table = sys.argv[2]
-    variant_fasta = sys.argv[3]
-    primer_file = sys.argv[4]
-    out_table = sys.argv[5]
-    out_fasta = sys.argv[6]
+    print(script_title)
+    args = parse_input()
     
-    # overhang = 22
-    overhang = int(sys.argv[7])
-    seq_min_len = int(sys.argv[8])
+    ncbi_fasta = args.input_nongenome_16s_fasta
+    variant_table = args.input_genome_16s_counts
+    variant_fasta = args.input_genome_16s_fasta
+    primer_file = args.input_pcr_primers_fasta
+    out_table = args.output_table
+    out_fasta = args.output_fasta
+    overhang = args.overhang
+    seq_min_len = args.min_seq_len
+    nthreads = args.nthreads
+    
+    # ncbi_fasta = sys.argv[1]
+    # variant_table = sys.argv[2]
+    # variant_fasta = sys.argv[3]
+    # primer_file = sys.argv[4]
+    # out_table = sys.argv[5]
+    # out_fasta = sys.argv[6]
+    
+    # # overhang = 22
+    # overhang = int(sys.argv[7])
+    # seq_min_len = int(sys.argv[8])
     
     blast_path = get_blast_path()
     
-    print('Add RefSeq sequences.')
     print('* Load NCBI 16S search FASTA...', end='')
     ncbi16s_dict = fasta_to_dict(ncbi_fasta, post_process='strain_name_from_refseq_string', 
                                  post_process_seq='seq_to_basic_code')
@@ -169,7 +213,7 @@ if __name__ == '__main__':
     # Now we obtained the reduced dictionary but with full length sequences. We
     # will need to do BLAST alignment to extract V3-V4 region, where it exists.
     print('* BLAST primers vs RefSeq sequences...', end='')
-    blast_out = blast_primers_vs_sequences(primer_file, ncbi_fasta_reduced, blast_path)
+    blast_out = blast_primers_vs_sequences(primer_file, ncbi_fasta_reduced, blast_path, nthreads=nthreads)
     os.remove(ncbi_fasta_reduced) # Cleanup temp file
     print('OK.')
 
@@ -198,9 +242,14 @@ if __name__ == '__main__':
     vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['strain_name']==strain, 
         'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
     vartab_ncbi_df.columns = ['assembly_id', 'strain_name', 'count', 'sequence']
+    vartab_ncbi_df_index_valid = (vartab_ncbi_df['sequence'].str.len() >= seq_min_len)
+    vartab_ncbi_df = vartab_ncbi_df.loc[vartab_ncbi_df_index_valid]
+    valid_strains = sum(vartab_ncbi_df_index_valid)
+    total_strains = len(vartab_ncbi_df_index_valid)
     print('OK.')
+    print('  Kept '+str(valid_strains)+' out of '+str(total_strains)+' total strains.')
         
-    # Filter out useless strain entries
+    # Filter out useless strain entries ? Default No.
     print('* Filtering out unidentified strains...', end='')
     vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Bacterium')]
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[B|b]acteria')]
@@ -221,6 +270,12 @@ if __name__ == '__main__':
     vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True)
     print('OK. (Combined: ', str(len(vartab_all_df)), 'rows)')
 
+    #
+    #   TABLE IS SAVED BEFORE LENGTH FILTERING STEP
+    #   LENGTH FILTER IS APPLIED ONLY TO FASTA
+    #   SIMPLY LENGTH FILTER EARLIER
+    #
+    #
     # Save new table
     print('* Saving table...', end='')
     vartab_all_df.to_csv(out_table, sep='\t', index=False)

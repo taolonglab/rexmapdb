@@ -25,6 +25,7 @@ Created on Thu Jul 27 13:27:07 2017
 @author: igor
 """
 
+import argparse
 import sys, os, re, platform
 import pandas as pd
 from io import StringIO
@@ -124,21 +125,21 @@ def assid_vs_spname_to_df (input_ass_sum):
 #%% BLAST
     
 def blast_primers_vs_sequences (primer_file, sequences_fa, blast_path='/usr/local/ncbi/blast/bin/blastn',
-                                blast_ws=7, match=5, mismatch=-4, blast_go=8, blast_ge=6,
+                                blast_ws=7, match=5, mismatch=-4, blast_go=8, blast_ge=6, nthreads=4,
                                 blast_format='"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore score"'):
     """ Blast primers vs blast db made out of full 16S sequences. Return the output
     as Blast outfmt 6 data frame. """
     
-    if get_os() == 'linux':
-        try:
-            nthreads = int(os.popen('grep -c cores /proc/cpuinfo').read())
-        except:
-            nthreads = 4
-    else:
-        try:
-            nthreads = int(active_count())
-        except:
-            nthreads = 4
+    # if get_os() == 'linux':
+    #     try:
+    #         nthreads = int(os.popen('grep -c cores /proc/cpuinfo').read())
+    #     except:
+    #         nthreads = 4
+    # else:
+    #     try:
+    #         nthreads = int(active_count())
+    #     except:
+    #         nthreads = 4
         
     blast = Popen(' '.join([blast_path, '-subject', primer_file, '-query', sequences_fa, 
                    '-word_size', str(blast_ws), '-outfmt', blast_format, '-strand', 'both',
@@ -186,7 +187,7 @@ def blast_out_vregion (df, overhang=0):
 def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, 
          primer_dir, fasta_out_dir, 
          blast_path='/usr/local/ncbi/blast/bin/blastn', overhang=21, 
-         min_len=200, primer_file_filter='V'):
+         min_len=200, primer_file_filter='V', nthreads=4):
     
     print('Count 16S hypervariable regions')
     # Load full genome assembly 16S sequences
@@ -194,7 +195,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     # If we want to process only specific primer set add it here as a string
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
-    print('* Global minimum tag length:', str(min_len), 'nt')
+    print('* Minimum sequence length:', str(min_len), 'nt')
     print('* Load files: ', end='')
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
@@ -239,8 +240,8 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
         print('* Assembly FASTA (Bacteria): '+ass_fasta_b)
         print('\r* '+os.path.splitext(os.path.basename(primer_file))[0]+': blast...', end='')
         # Run BLAST with 16s sequences vs PCR primer sequences
-        blast_out_a_df = blast_primers_vs_sequences(primer_file, ass_fasta_a, blast_path)
-        blast_out_b_df = blast_primers_vs_sequences(primer_file, ass_fasta_b, blast_path)
+        blast_out_a_df = blast_primers_vs_sequences(primer_file, ass_fasta_a, blast_path, nthreads=nthreads)
+        blast_out_b_df = blast_primers_vs_sequences(primer_file, ass_fasta_b, blast_path, nthreads=nthreads)
         blast_out_df = pd.concat([blast_out_a_df, blast_out_b_df], ignore_index=True)
         blast_out_df[13] = 'Forward'
         blast_out_df.loc[blast_out_df[1].str.startswith('Reverse'), 13] = 'Reverse'
@@ -328,33 +329,76 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
                 primer_dir+'/'+os.path.splitext(os.path.basename(primer_file))[0]+'_primer_miss.txt',
                 sep='\t', index=False)
         print('.OK')
+
+
+def parse_input():
+    parser = argparse.ArgumentParser(
+        description='Count hypervariable regions per strain.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('--input-fasta-archaea', required=True, 
+                        help='Input 16s_from_genomes_archaea FASTA file.')
+    parser.add_argument('--input-fasta-bacteria', required=True, 
+                        help='Input 16s_from_genomes_bacteria FASTA file.')
+    parser.add_argument('--input-asssum-archaea', required=True, 
+                        help='Input archaea_assembly_summary table.')
+    parser.add_argument('--input-asssum-bacteria', required=True, 
+                        help='Input bacteria assembly summary table.')
+    parser.add_argument('--input-pcr-primers-folder', required=True,
+                        help='Directory with FASTA files for PCR primers.')
+    parser.add_argument('--output-dir', required=True, 
+                        help='Output directory for the final FASTA and table.')
+    parser.add_argument('--overhang', required=False, default=0,
+                        help='Extra overhang on both sides of extracted hypervariable regions.')
+    parser.add_argument('--min-seq-len', required=False, default=200,
+                        help='Minimum allowed hypervariable region sequence length.')
+    parser.add_argument('--hypervar-region-filter', required=False, default='V',
+                        help='Text filter for running one or more specific hypervariable regions.')
+    parser.add_argument('--nthreads', required=False, default=4,
+                        help='Number of parallel threads to use in the BLAST step.')
+    args = parser.parse_args()
+    return args
     
                 
 #%% do this if script is ran from comamnd line
 if __name__ == '__main__':
 
-    ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
-    ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
-    assembly_file_a = sys.argv[3]   # Assembly summary filtered for archaea
-    assembly_file_b = sys.argv[4]   # Assembly summary filtered for bacteria
-    primer_dir = sys.argv[5]        # Folder with FASTA files for PCR primers
-    fasta_out_dir = sys.argv[6]     # Output folder for the final FASTA and table
+    args = parse_input()
     
-    if len(sys.argv) >= 8:          # Argument 7 is overhang
-        overhang = sys.argv[7]
-    else:
-        overhang = 0
+    ass_fasta_a = args.input_fasta_archaea
+    ass_fasta_b = args.input_fasta_bacteria
+    assembly_file_a = args.input_asssum_archaea
+    assembly_file_b = args.input_asssum_bacteria
+    primer_dir = args.input_pcr_primers_folder
+    fasta_out_dir = args.output_dir
+    overhang = args.overhang
+    min_len = args.min_seq_len
+    filter = args.hypervar_region_filter
+    nthreads = args.nthreads
     
-    if len(sys.argv) >= 9:          # Argument 8 is minimum acceptable tag length
-        min_len = int(sys.argv[8])       # after primer alignment.
-    else:
-        min_len = 200
+    # ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
+    # ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
+    # assembly_file_a = sys.argv[3]   # Assembly summary filtered for archaea
+    # assembly_file_b = sys.argv[4]   # Assembly summary filtered for bacteria
+    # primer_dir = sys.argv[5]        # Folder with FASTA files for PCR primers
+    # fasta_out_dir = sys.argv[6]     # Output folder for the final FASTA and table
     
-    if len(sys.argv) >= 10:          # Argument 9 is text filter for hypervariable region
-        filter = sys.argv[9]
-    else:
-        filter = 'V'
+    # if len(sys.argv) >= 8:          # Argument 7 is overhang
+    #     overhang = sys.argv[7]
+    # else:
+    #     overhang = 0
+    
+    # if len(sys.argv) >= 9:          # Argument 8 is minimum acceptable tag length
+    #     min_len = int(sys.argv[8])       # after primer alignment.
+    # else:
+    #     min_len = 200
+    
+    # if len(sys.argv) >= 10:          # Argument 9 is text filter for hypervariable region
+    #     filter = sys.argv[9]
+    # else:
+    #     filter = 'V'
+        
     
     main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, 
          fasta_out_dir, blast_path = get_blast_path(), min_len=min_len,
-         overhang=overhang, primer_file_filter=filter)
+         overhang=overhang, primer_file_filter=filter, nthreads=nthreads)
