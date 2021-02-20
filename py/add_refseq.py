@@ -171,9 +171,9 @@ if __name__ == '__main__':
     primer_file = args.input_pcr_primers_fasta
     out_table = args.output_table
     out_fasta = args.output_fasta
-    overhang = args.overhang
-    seq_min_len = args.min_seq_len
-    nthreads = args.nthreads
+    overhang = int(args.overhang)
+    seq_min_len = int(args.min_seq_len)
+    nthreads = int(args.nthreads)
     debug = args.debug
     
     # ncbi_fasta = sys.argv[1]

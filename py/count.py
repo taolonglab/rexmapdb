@@ -371,10 +371,10 @@ if __name__ == '__main__':
     assembly_file_b = args.input_asssum_bacteria
     primer_dir = args.input_pcr_primers_folder
     fasta_out_dir = args.output_dir
-    overhang = args.overhang
-    min_len = args.min_seq_len
+    overhang = int(args.overhang)
+    min_len = int(args.min_seq_len)
     filter = args.hypervar_region_filter
-    nthreads = args.nthreads
+    nthreads = int(args.nthreads)
     
     # ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
     # ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
