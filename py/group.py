@@ -12,7 +12,11 @@ Created on Mon Nov 20 16:08:06 2017
 @author: igor
 """
 import re, sys
+import argparse
 import pandas as pd
+
+script_title = 'Group unique sequences.'
+
 
 #%% Table processor
 
@@ -106,12 +110,38 @@ def main(table_filename, fasta_filename, table_output, fasta_output):
     d = fasta_to_seq_dict(fasta_filename)
     #%% Write output
     dict_to_fasta(d, fasta_output, table_output)
+
+
+
+def parse_input():
+    parser = argparse.ArgumentParser(
+        description=script_title,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('--input-table', required=True, 
+                        help='Input wrefseq_table file (output from add_refseq.py).')
+    parser.add_argument('--input-fasta', required=True, 
+                        help='Input wrefseq FASTA file (output from add_refseq.py).')
+    parser.add_argument('--output-table', required=True, 
+                        help='Output unique_variants table.')
+    parser.add_argument('--output-fasta', required=True,
+                        help='Output unique_variants FASTA.')
+    args = parser.parse_args()
+    return args
     
 #%% Main call
 if __name__ == '__main__':
-    table_filename = sys.argv[1]
-    fasta_filename = sys.argv[2]
-    table_output = sys.argv[3]
-    fasta_output = sys.argv[4]
+    # table_filename = sys.argv[1]
+    # fasta_filename = sys.argv[2]
+    # table_output = sys.argv[3]
+    # fasta_output = sys.argv[4]
+    print(script_title)
+    args = parse_input()
+    table_filename = args.input_table
+    fasta_filename = args.input_fasta
+    table_output = args.output_table
+    fasta_output = args.output_fasta
+    print('Done.')
+    
     main(table_filename, fasta_filename, table_output, fasta_output)
 
