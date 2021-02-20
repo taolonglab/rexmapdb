@@ -52,14 +52,17 @@ if __name__ == '__main__':
     
     # Load tables into a list of data frames then use pd.concat
     sys.stdout.write('* Loading INPUT tables...')
+    sys.stdout.flush()
     tables_df_list = [pd.read_table(t, sep='\t') for t in tables]
     sys.stdout.write(' OK.\n')
     sys.stdout.write('* Concatenating...')
+    sys.stdout.flush()
     tables_df = pd.concat(tables_df_list)
     sys.stdout.write(' OK.\n')
     
     # Generate strain names
     sys.stdout.write('* Generating strain names...')
+    sys.stdout.flush()
     tables_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
     tables_df['strain_name'] = [re.sub('_@rrn[0-9]+$', '', x) for x in 
                                 tables_df['variant_name']]
@@ -68,6 +71,7 @@ if __name__ == '__main__':
     # Relabel variant names (take into account all unique sequences from all
     # hypervariable regions)
     sys.stdout.write('* Renumerating sequences...')
+    sys.stdout.flush()
     tables_df_straingroups = tables_df.groupby('strain_name')
     tables_renum_list = list()
     for i, table_group in enumerate(tables_df_straingroups):
@@ -85,6 +89,7 @@ if __name__ == '__main__':
 
     # Write output table and FASTA for the combined sequences
     sys.stdout.write('* Saving output... ')
+    sys.stdout.flush()
     tables_renum_df.pop('strain_name')
     tables_renum_df.rename(columns={'variant_name':'strain_name'}, inplace=True)
     write_df_to_fasta(tables_renum_df, output_fasta, meta_col='strain_name',
