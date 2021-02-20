@@ -29,6 +29,7 @@ import sys, os, re, platform
 import pandas as pd
 from io import StringIO
 from subprocess import Popen, PIPE
+from threading import active_count
 
 def get_os ():
     """ Detect operating system. """
@@ -123,14 +124,27 @@ def assid_vs_spname_to_df (input_ass_sum):
 #%% BLAST
     
 def blast_primers_vs_sequences (primer_file, sequences_fa, blast_path='/usr/local/ncbi/blast/bin/blastn',
-                                blast_ws=7, match=5, mismatch=-4, blast_go=8, blast_ge=6, ncpu=4,
+                                blast_ws=7, match=5, mismatch=-4, blast_go=8, blast_ge=6,
                                 blast_format='"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore score"'):
     """ Blast primers vs blast db made out of full 16S sequences. Return the output
     as Blast outfmt 6 data frame. """
+    
+    if get_os() == 'linux':
+        try:
+            nthreads = int(os.popen('grep -c cores /proc/cpuinfo').read())
+        except:
+            nthreads = 4
+    else:
+        try:
+            nthreads = int(active_count())
+        except:
+            nthreads = 4
+        
     blast = Popen(' '.join([blast_path, '-subject', primer_file, '-query', sequences_fa, 
                    '-word_size', str(blast_ws), '-outfmt', blast_format, '-strand', 'both',
                    '-reward', str(match), '-penalty', str(mismatch),
-                   '-gapopen', str(blast_go), '-gapextend', str(blast_ge)
+                   '-gapopen', str(blast_go), '-gapextend', str(blast_ge),
+                   '-num_threads', str(nthreads)
                    ]), 
                     stdout=PIPE, stderr=PIPE, shell=True)
     blast_out, blast_err = blast.communicate()
