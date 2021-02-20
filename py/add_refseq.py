@@ -153,6 +153,8 @@ def parse_input():
                         help='Minimum allowed hypervariable region sequence length. Use same value as in counts.py')
     parser.add_argument('--nthreads', required=False, default=4,
                         help='Number of parallel threads to use in the BLAST step.')
+    parser.add_argument('--debug', required=False, default='False',
+                        help='Debug mode (True/False).')
     args = parser.parse_args()
     return args
 
@@ -172,6 +174,7 @@ if __name__ == '__main__':
     overhang = args.overhang
     seq_min_len = args.min_seq_len
     nthreads = args.nthreads
+    debug = args.debug
     
     # ncbi_fasta = sys.argv[1]
     # variant_table = sys.argv[2]
@@ -228,6 +231,8 @@ if __name__ == '__main__':
                                'gapopen', 'seq_start', 'seq_end', 'pr_start',
                                'pr_end', 'eval', 'bitscore', 'score', 'pr_type']
     print('OK.')
+    if debug == 'True':
+        print(blast_out_best2.head())
 
     # Generate reference between strain names and NCBI RefSeq IDs
     print('* Generating strain names and RefSeq IDs...', end='')
@@ -236,6 +241,8 @@ if __name__ == '__main__':
     id_vs_strain_df['id'] = [id for k, [id, s] in ncbi16s_new_dict.items()]
     id_vs_strain_df['seq'] = [s for k, [id, s] in ncbi16s_new_dict.items()]
     blast_out_best3 = pd.merge(blast_out_best2, id_vs_strain_df, on='strain_name')
+    if debug == 'True':
+        print(blast_out_best3.head())
     
     # Dictionary mapping strain name to the vregion sequence
     strain_to_vreg_dict = blast_out_best3.groupby('strain_name').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
