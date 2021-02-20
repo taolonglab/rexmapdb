@@ -8,16 +8,9 @@ Created on Sun Feb 14 09:35:43 2021
 
 import re
 import sys
-import math
 import pandas as pd
 import argparse
 
-
-# DEBUG
-tables = ['/Users/igor/cloud/research/microbiome/simulator/V1-V2_27F-338R_hang22_2021-02-13_wrefseq_table.txt',
-          '/Users/igor/cloud/research/microbiome/simulator/V3-V4_337F-805R_hang22_2021-02-13_wrefseq_table.txt',
-          '/Users/igor/cloud/research/microbiome/simulator/V5-V6_805F-1185mR_hang22_2021-02-13_wrefseq_table.txt',
-          '/Users/igor/cloud/research/microbiome/simulator/V7-V8_1185mF-1492R_hang22_2021-02-13_wrefseq_table.txt']
 
 
 
@@ -28,8 +21,6 @@ def parse_input():
   )
   parser.add_argument('--tables', required=True, 
                       help='A list of tables, separated by comma.')
-  parser.add_argument('--fastas', required=True, 
-                      help='A list of FASTAs, separated by comma.')
   parser.add_argument('--out-table', required=True,
                       help='Output table name.')
   parser.add_argument('--out-fasta', required=True,
@@ -56,7 +47,6 @@ if __name__ == '__main__':
     # print(args)
     
     tables = args.tables.split(',')
-    fastas = args.fastas.split(',')
     output_table = args.out_table
     output_fasta = args.out_fasta
     
@@ -71,7 +61,8 @@ if __name__ == '__main__':
     # Generate strain names
     sys.stdout.write('* Generating strain names...')
     tables_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
-    tables_df['strain_name'] = [re.sub('_@rrn[0-9]+$', '', x) for x in tables_df['variant_name']]
+    tables_df['strain_name'] = [re.sub('_@rrn[0-9]+$', '', x) for x in 
+                                tables_df['variant_name']]
     sys.stdout.write(' OK.\n')
 
     # Relabel variant names (take into account all unique sequences from all
@@ -82,7 +73,8 @@ if __name__ == '__main__':
     for i, table_group in enumerate(tables_df_straingroups):
         strain_name = table_group[0]
         table_renum = table_group[1]
-        good_ids = [j for j, s in enumerate(table_renum['sequence']) if str(s) != 'nan']
+        good_ids = [j for j, s in enumerate(table_renum['sequence']) 
+                    if str(s) != 'nan']
         table_renum = table_renum.iloc[good_ids]
         table_renum['variant_name'] = [strain_name+'_@rrn'+str(j).zfill(2) 
                                        for j in range(len(table_renum))]
@@ -94,9 +86,10 @@ if __name__ == '__main__':
     # Write output table and FASTA for the combined sequences
     sys.stdout.write('* Saving output... ')
     tables_renum_df.pop('strain_name')
-    write_df_to_fasta(tables_renum_df, output_fasta, meta_col='variant_name',
+    tables_renum_df.rename(columns={'variant_name':'strain_name'}, inplace=True)
+    write_df_to_fasta(tables_renum_df, output_fasta, meta_col='strain_name',
                       seq_col='sequence')
-    tables_renum_df.to_csv(sep='\t')
+    tables_renum_df.to_csv(output_table, sep='\t', index=False)
     sys.stdout.write(' OK.\n')
     # print(tables)
     # print(fastas)
