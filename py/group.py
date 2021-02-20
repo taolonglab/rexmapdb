@@ -140,8 +140,7 @@ if __name__ == '__main__':
     table_filename = args.input_table
     fasta_filename = args.input_fasta
     table_output = args.output_table
-    fasta_output = args.output_fasta
-    print('Done.')
-    
+    fasta_output = args.output_fasta    
     main(table_filename, fasta_filename, table_output, fasta_output)
+    print('Done.')
 

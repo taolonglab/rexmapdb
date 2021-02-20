@@ -2,7 +2,7 @@
 # and remove them (usually very small number of strains.)
 # if they are < 1% in that rank.
 
-library(himap)
+library(rexmap)
 library(data.table)
 
 # Input and output file (gets overwritten)
