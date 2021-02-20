@@ -18,7 +18,7 @@ import os, sys, re
 import pandas as pd
 from count import blast_primers_vs_sequences, blast_out_vregion, get_blast_path
 
-script_title = 'Combine hypervariable regions from full genomes and 1S sequences from NCBI RefSeq search.'
+script_title = 'Combine hypervariable regions from full genomes and 16S sequences from NCBI RefSeq search.'
 
 
 def fasta_to_dict (input_fa, keys=None, sep=' ', post_process=None,
