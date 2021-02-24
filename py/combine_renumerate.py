@@ -63,7 +63,8 @@ if __name__ == '__main__':
     # Generate strain names
     sys.stdout.write('* Generating strain names...')
     sys.stdout.flush()
-    tables_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
+    if 'strain_name' in tables_df.columns:
+        tables_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
     tables_df['strain_name'] = [re.sub('_@rrn[0-9]+$', '', x) for x in 
                                 tables_df['variant_name']]
     sys.stdout.write(' OK.\n')
@@ -91,7 +92,7 @@ if __name__ == '__main__':
     sys.stdout.write('* Saving output... ')
     sys.stdout.flush()
     tables_renum_df.pop('strain_name')
-    tables_renum_df.rename(columns={'variant_name':'strain_name'}, inplace=True)
+    # tables_renum_df.rename(columns={'variant_name':'strain_name'}, inplace=True)
     write_df_to_fasta(tables_renum_df, output_fasta, meta_col='strain_name',
                       seq_col='sequence')
     tables_renum_df.to_csv(output_table, sep='\t', index=False)
