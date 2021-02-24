@@ -10,6 +10,7 @@ Created on Tue Feb 27 09:15:26 2018
 @author: igor
 """
 import sys, subprocess, re, os
+import argparse
 from count import get_os
 
 eutil_url = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/'
@@ -106,13 +107,33 @@ def main(fasta_out_path, curl_path=None, verbose=True, retmax=10000, debug=False
     if verbose:
         print('OK.')
 
+def parse_input():
+  parser = argparse.ArgumentParser(
+    description='Download NCBI 16S RefSeq sequences.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument('--output-fasta', required=True, 
+                      help='Output FASTA file for 16S sequences.')
+  parser.add_argument('--debug', required=False, default=False, type=bool,
+                      help='Debug mode.')
+  parser.add_argument('--verbose', required=False, default=True, type=bool,
+                      help='Verbose print output.')
+  args = parser.parse_args()
+  return args
+
 
 if __name__ == '__main__':
     
-    fasta_out_path = sys.argv[1]
+    # fasta_out_path = sys.argv[1]
     
-    if len(sys.argv) >= 3:          # Argument 7 is overhang
-        debug = True
-    else:
-        debug = False
-    main(fasta_out_path, debug=debug)
+    # if len(sys.argv) >= 3:          # Argument 7 is overhang
+    #     debug = True
+    # else:
+    #     debug = False
+    
+    args = parse_input()
+    fasta_out_path = args.output_fasta
+    debug = args.debug
+    verbose = args.verbose
+    
+    main(fasta_out_path, debug=debug, verbose=verbose)

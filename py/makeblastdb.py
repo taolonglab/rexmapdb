@@ -6,6 +6,7 @@ Created on Sun May 20 13:42:31 2018
 @author: igor
 """
 import sys, os
+import argparse
 from count import get_os
 from subprocess import Popen, PIPE
 
@@ -28,7 +29,23 @@ def main(in_fa, out_prefix):
                              '-out', out_prefix], stdout=sys.stdout, stderr=sys.stderr)
     out, err = makedb.communicate()
 
+def parse_input():
+  parser = argparse.ArgumentParser(
+    description='Generate BLAST database from RExMapDB FASTA file.',
+    formatter_class=argparse.ArgumentDefaultsHelpFormatter
+  )
+  parser.add_argument('--input-fasta', required=True, 
+                      help='Input FASTA file (unique_variants_R.fasta).')
+  parser.add_argument('--out-db-prefix', required=True,
+                      help='Output prefix for BLAST database files.')
+  args = parser.parse_args()
+  return args
+
 if __name__ == '__main__':
-    in_fa = sys.argv[1]
-    out_prefix = sys.argv[2]
+    
+    args = parse_input()
+    in_fa = args.input_fasta
+    out_prefix = args.out_db_prefix
+    # in_fa = sys.argv[1]
+    # out_prefix = sys.argv[2]
     main(in_fa, out_prefix)

@@ -12,12 +12,14 @@ Created on Fri Jul 21 08:15:42 2017
 """
 
 import gzip, os, sys
+import argparse
 import pandas as pd
 from Bio import SeqIO
 
+script_title = 'Extract 16S sequences from full genomes.'
 
 # ass_sub = '/Users/igor/cloud/research/microbiome/genomes/data/bacteria/bacteria_assembly_summary_sub.txt'
-ass_sub = '/Users/igor/cloud/research/microbiome/genomes/data/archaea/archaea_assembly_summary_sub_2017-08-24.txt'
+# ass_sub = '/Users/igor/cloud/research/microbiome/genomes/data/archaea/archaea_assembly_summary_sub_2017-08-24.txt'
 
 def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/', 
          delim=';', match_str='16S ribosomal RNA.*', len_min=500, len_max=2000,
@@ -36,7 +38,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
         - fa_out_exist_action: allowed values are either 'append' or 'overwrite', if overwrite
             it will overwrite the fa_out_name file if it already exists. if 'append' it will
             load the FASTA file, check what's already processed and skip those. this is used
-            in case of early script termination.
+            to resume the sdcript in case of early termination / errors.
         
     """
     
@@ -178,6 +180,25 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
 
             
 
+def parse_input():
+    parser = argparse.ArgumentParser(
+        description=script_title,
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+    )
+    parser.add_argument('--input-asssum', required=True, 
+                        help='Input assembly summary file (either bacteria or archaea).')
+    parser.add_argument('--input-features-dir', required=True, 
+                        help='Folder with assembly features (typically data/features/).')
+    parser.add_argument('--input-sequences-dir', required=True, 
+                        help='Folder with assembly sequences (typically data/sequences/).')
+    parser.add_argument('--output-fasta', required=True, 
+                        help='Output FASTA with 16S sequences.')
+    parser.add_argument('--action', required=False, default='append',
+                        help='Whether to "append" or "overwrite" output FASTA. Used for resuming from errors.')
+    args = parser.parse_args()
+    return args
+
+
 #%% run this is script is run directly and not imported
 if __name__ == '__main__':
 #    ass_f_dir = '/Users/igor/data/ncbi_genomes/archaea/features/'
@@ -188,14 +209,22 @@ if __name__ == '__main__':
 #    ass_s_dir = '/Users/igor/cloud/research/microbiome/genomes/data/bacteria/sequences/'
 #    out_fa = '/Users/igor/cloud/research/microbiome/genomes/data/bacteria/16s_from_genomes_2017-07-20.fasta'
 #    in_file = '/Users/igor/cloud/research/microbiome/genomes/data/bacteria/bacteria_assembly_summary_sub_2017-07-20.txt'
-    in_file = sys.argv[1]
-    ass_f_dir = sys.argv[2]
-    ass_s_dir = sys.argv[3]
-    out_fa = sys.argv[4]
-    if len(sys.argv) == 6:
-        action = sys.argv[5]
-    else:
-        action = 'append'
+    # in_file = sys.argv[1]
+    # ass_f_dir = sys.argv[2]
+    # ass_s_dir = sys.argv[3]
+    # out_fa = sys.argv[4]
+    # if len(sys.argv) == 6:
+    #     action = sys.argv[5]
+    # else:
+    #     action = 'append'
+    print(script_title)
+    args = parse_input()
+    
+    in_file = args.input_asssum
+    ass_f_dir = args.input_features_dir
+    ass_s_dir = args.input_sequences_dir
+    out_fa = args.output_fasta
+    action = args.action
     
     ass_sub = in_file
     fa_out_name = out_fa

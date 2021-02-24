@@ -85,14 +85,16 @@ Extract 16S ribosomal RNA gene sequences from FASTA sequences, based on their GF
 cd ../../
 
 python3 py/extract.py \
-    data/archaea_assembly_summary_filter_2018-05-20.txt \
-    data/features/ data/sequences/ \
-    data/16s_from_genomes_archaea_2018-05-20.fasta
+    --input-asssum data/archaea_assembly_summary_filter_2018-05-20.txt \
+    --input-features-dir data/features/ \
+    --input-sequences-dir data/sequences/ \
+    --output-fasta data/16s_from_genomes_archaea_2018-05-20.fasta
 
 python3 py/extract.py \
-    data/bacteria_assembly_summary_filter_2018-05-20.txt \
-    data/features/ data/sequences/ \
-    data/16s_from_genomes_bacteria_2018-05-20.fasta
+    --input-asssum data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    --input-features-dir data/features/ \
+    --input-sequences-dir data/sequences/ \
+    --output-fasta data/16s_from_genomes_bacteria_2018-05-20.fasta
 
 ```
 
@@ -123,31 +125,38 @@ Align primers vs 16S sequences from full genome:
 
 ```sh
 python3 py/count.py \
-    data/16s_from_genomes_archaea_2018-05-20.fasta \
-    data/16s_from_genomes_bacteria_2018-05-20.fasta \
-    data/archaea_assembly_summary_filter_2018-05-20.txt \
-    data/bacteria_assembly_summary_filter_2018-05-20.txt \
-    data/pcr_primers/ \
-    data/ 22 
+    --input-fasta-archaea data/16s_from_genomes_archaea_2018-05-20.fasta \
+    --input-fasta-bacteria data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    --input-asssum-archaea data/archaea_assembly_summary_filter_2018-05-20.txt \
+    --input-asssum-bacteria data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    --input-pcr-primers-folder data/pcr_primers/ \
+    --output-dir data/ \
+    --overhang 22 
 ```
 
 8th argument can be added with a text pattern if we just want to regenerate files for a specific primer set, e.g.
 ```sh
 python3 py/count.py \
-    data/16s_from_genomes_archaea_2018-05-20.fasta \
-    data/16s_from_genomes_bacteria_2018-05-20.fasta \
-    data/archaea_assembly_summary_filter_2018-05-20.txt \
-    data/bacteria_assembly_summary_filter_2018-05-20.txt \
-    data/pcr_primers/ \
-    data/ 22 200 V4_515F-805R
+    --input-fasta-archaea data/16s_from_genomes_archaea_2018-05-20.fasta \
+    --input-fasta-bacteria data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    --input-asssum-archaea data/archaea_assembly_summary_filter_2018-05-20.txt \
+    --input-asssum-bacteria data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    --input-pcr-primers-folder data/pcr_primers/ \
+    --output-dir data/ \
+    --overhang 22 \
+    --min-seq-len 200 \
+    --hypervar-region-filter V4_515F-805R
 
 python3 py/count.py \
-    data/16s_from_genomes_archaea_2018-05-20.fasta \
-    data/16s_from_genomes_bacteria_2018-05-20.fasta \
-    data/archaea_assembly_summary_filter_2018-05-20.txt \
-    data/bacteria_assembly_summary_filter_2018-05-20.txt \
-    data/pcr_primers/ \
-    data/ 22 400 V3-V4_337F-805R
+    --input-fasta-archaea data/16s_from_genomes_archaea_2018-05-20.fasta \
+    --input-fasta-bacteria data/16s_from_genomes_bacteria_2018-05-20.fasta \
+    --input-asssum-archaea data/archaea_assembly_summary_filter_2018-05-20.txt \
+    --input-asssum-bacteria data/bacteria_assembly_summary_filter_2018-05-20.txt \
+    --input-pcr-primers-folder data/pcr_primers/ \
+    --output-dir data/ \
+    --overhang 22 \
+    --min-seq-len 400 \
+    --hypervar-region-filter V3-V4_337F-805R
 ```
 
 where we also specified the minimum length for sequences between primers, for each primer pair (200 nt for V4 and 400 nt for V3-V4).
@@ -165,7 +174,8 @@ From this point on we will process only V3-V4 primers, but the same can be done 
 Now, we want to merge these genome assembly sequences with strains that do not have full genome information. We first query NCBI RefSeq database for 16S sequences (in 10K chunks) and download them to a FASTA file `data/16S_RefSeq_2018-05-20.fasta`:
 
 ```sh
-python3 py/dl_refseq.py data/16s_RefSeq_2018-05-20.fasta
+python3 py/dl_refseq.py \
+    --output-fasta data/16s_RefSeq_2018-05-20.fasta
 ```
 
 
@@ -183,13 +193,14 @@ We go through each strain name from the NCBI RefSeq search results and add seque
 
 ```sh
 python3 py/add_refseq.py \
-    data/16s_RefSeq_2018-05-20.fasta \
-    data/16s_from_genomes_2018-05-20_V3-V4_337F-805R_hang22_counts.txt \
-    data/V3-V4_337F-805R_hang22_sequences.fasta \
-    data/pcr_primers/V3-V4_337F-805R.fasta \
-    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
-    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
-    22 400
+    --input-nongenome-16s-fasta data/16s_RefSeq_2018-05-20.fasta \
+    --input-genome-16s-counts data/16s_from_genomes_2018-05-20_V3-V4_337F-805R_hang22_counts.txt \
+    --input-genome-16s-fasta data/V3-V4_337F-805R_hang22_sequences.fasta \
+    --input-pcr-primers-fasta data/pcr_primers/V3-V4_337F-805R.fasta \
+    --output-table data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
+    --output-fasta data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    --overhang 22 \
+    --min-seq-len 400
 ```
 
 This will add any missing strains to both the FASTA file and the count table (RefSeq sequences will have copy number set to 1).
@@ -200,10 +211,10 @@ Now, many strains will have the exact same sequence. We want to group strain nam
 
 ```sh
 python3 py/group.py \
-    data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
-    data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
-    data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
-    data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta
+    --input-table data/V3-V4_337F-805R_hang22_wrefseq_table.txt \
+    --input-fasta data/V3-V4_337F-805R_hang22_wrefseq_sequences.fasta \
+    --output-table data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
+    --output-fasta data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta
 ```
 
 
@@ -217,9 +228,11 @@ Let's also put the final files in the new `database` folder. The contents of thi
 mkdir database
 
 Rscript --vanilla R/remove_taxonomic_outliers.R \
-    data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
-    database/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants_R.txt \
-    data/V3-V4_337F-805R_excluded_outlier_strains.txt
+    --input-table data/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants.txt \
+    --input-fasta data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta \
+    --output-table database/V3-V4_337F-805R_hang22_wrefseq_table_unique_variants_R.txt \
+    --output-fasta database/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants_R.fasta \
+    --output-excl data/V3-V4_337F-805R_excluded_outlier_strains.txt
 ```
 
 The removed strains are saved in `data/V3-V4_337F-805R_excluded_outlier_strains.txt`
@@ -229,8 +242,8 @@ The removed strains are saved in `data/V3-V4_337F-805R_excluded_outlier_strains.
 
 ```sh
 python3 py/makeblastdb.py \
-    data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta \
-    database/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants
+    --input-fasta data/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants.fasta \
+    --out-db-prefix database/V3-V4_337F-805R_hang22_wrefseq_sequences_unique_variants
 
 ```
 
