@@ -24,7 +24,7 @@ def table_to_dict (table_filename):
     """ Load table with the information on v4 region copy number for each
     unique strain. """
     tab = pd.read_csv(table_filename, sep='\t', usecols=[1,2])
-    return tab.set_index('strain_name').to_dict()['count']
+    return tab.set_index('variant_name').to_dict()['count']
 
 #%% Species text 
 def species_from_strain (strain_name, delim='_', out_delim='_', na_list=['sp.', 'bacterium']):
@@ -43,7 +43,7 @@ def dict_to_fasta (d, out_fasta, out_table):
     and concatenated list of unique species. Write another tab
     delimited file with full strain names and vid. """
     with open(out_fasta, 'w') as out_fa, open(out_table, 'w') as out_tab:
-        out_tab.write('variant_id\tstrain_name\tcopy_number\tseq\n')
+        out_tab.write('variant_id\tvariant_name\tcopy_number\tseq\n')
         for i, (seq, metas) in enumerate(d.items()):
             # Write meta-data first
             meta = '>' + str(i).zfill(5) + '-'

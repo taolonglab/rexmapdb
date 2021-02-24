@@ -302,7 +302,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
                  '_hang' + str(overhang) + '_sequences.fasta')
 
         with open(counts_filename, 'w') as counts_file, open(fasta_filename, 'w') as fasta_file:
-            counts_file.write('assembly_id\tstrain_name\tcount\tsequence\n')
+            counts_file.write('assembly_id\tvariant_name\tcount\tsequence\n')
             prev_strain = ''
             rrna_copy = 0
             for assid, counts_dict in assid_to_vreg_dict.items():
