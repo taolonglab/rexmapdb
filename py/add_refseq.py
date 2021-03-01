@@ -198,8 +198,11 @@ if __name__ == '__main__':
     print('* Load full genome variant table...', end='')
     vartab_df = pd.read_csv(variant_table, sep='\t')
     print('OK. (', str(len(vartab_df)), 'rows)')
-    fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['strain_name']])
-
+    if 'strain_name' in vartab_df.columns:
+        # For compatibility with older version of the script
+        fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['strain_name']])
+    else:
+        fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['variant__name']])
     # For each strain from RefSeq search check first if the strain name exist
     # if it does, just skip it. If it does not exist, check if the sequence
     # after PCR primer trimming exist in the database.
