@@ -243,13 +243,13 @@ if __name__ == '__main__':
     id_vs_strain_df['id'] = [id for k, [id, s] in ncbi16s_new_dict.items()]
     id_vs_strain_df['seq'] = [s for k, [id, s] in ncbi16s_new_dict.items()]
     blast_out_best3 = pd.merge(blast_out_best2, id_vs_strain_df, on='variant_name')
-    if debug == 'True':
-        print(blast_out_best3.head())
+    # if debug == 'True':
+    #     print(blast_out_best3.head())
     
     # Dictionary mapping variant_name to the vregion sequence
     strain_to_vreg_dict = blast_out_best3.groupby('variant_name').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
-    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['variant_name']+'_@rrn00' ==strain, 
-        'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
+    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['variant_name'] == strain, 
+        'id'].iloc[0], strain+'_@rrn00', 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
     vartab_ncbi_df.columns = ['assembly_id', 'variant_name', 'count', 'sequence']
     vartab_ncbi_df_index_valid = (vartab_ncbi_df['sequence'].str.len() >= seq_min_len)
     vartab_ncbi_df = vartab_ncbi_df.loc[vartab_ncbi_df_index_valid]
@@ -276,8 +276,10 @@ if __name__ == '__main__':
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Deep-sea')]
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Fe-oxidizing')]
     # Final table
-    vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True, sort=True)
+    vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True, sort=False)
     print('OK. (Combined: ', str(len(vartab_all_df)), 'rows)')
+    if debug == 'True':
+        print(vartab_all_df.head())
 
     # Save new table
     print('* Saving table...', end='')
