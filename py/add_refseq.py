@@ -248,7 +248,7 @@ if __name__ == '__main__':
     
     # Dictionary mapping variant_name to the vregion sequence
     strain_to_vreg_dict = blast_out_best3.groupby('variant_name').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
-    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['variant_name']==strain, 
+    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['variant_name']+'_@rrn00' ==strain, 
         'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
     vartab_ncbi_df.columns = ['assembly_id', 'variant_name', 'count', 'sequence']
     vartab_ncbi_df_index_valid = (vartab_ncbi_df['sequence'].str.len() >= seq_min_len)
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     print('OK.')
     print('  Kept '+str(valid_strains)+' out of '+str(total_strains)+' total strains.')
         
-    # Filter out useless strain entries ? Default No.
+    # Filter out useless strain entries ?
     print('* Filtering out unidentified strains...', end='')
     vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Bacterium')]
     vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[B|b]acteria')]
