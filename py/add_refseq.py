@@ -200,9 +200,8 @@ if __name__ == '__main__':
     print('OK. (', str(len(vartab_df)), 'rows)')
     if 'strain_name' in vartab_df.columns:
         # For compatibility with older version of the script
-        fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['strain_name']])
-    else:
-        fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['variant_name']])
+        vartab_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
+    fullgen_strains = set([re.sub('_@rrn[0-9]+', '', s) for s in vartab_df['variant_name']])
     # For each strain from RefSeq search check first if the strain name exist
     # if it does, just skip it. If it does not exist, check if the sequence
     # after PCR primer trimming exist in the database.
@@ -230,7 +229,7 @@ if __name__ == '__main__':
     blast_out_best = blast_out.iloc[blast_out.groupby([0, 13]).apply(lambda t: t[11].idxmax())]
     blast_out_best2 = blast_out_best.groupby(0).filter(lambda t: len(t) > 1)
 
-    blast_out_best2.columns = ['strain_name', 'primer', 'pct_sim', 'aln_len', 'mismatches',
+    blast_out_best2.columns = ['variant_name', 'primer', 'pct_sim', 'aln_len', 'mismatches',
                                'gapopen', 'seq_start', 'seq_end', 'pr_start',
                                'pr_end', 'eval', 'bitscore', 'score', 'pr_type']
     print('OK.')
@@ -240,18 +239,18 @@ if __name__ == '__main__':
     # Generate reference between strain names and NCBI RefSeq IDs
     print('* Generating strain names and RefSeq IDs...', end='')
     id_vs_strain_df = pd.DataFrame(list(ncbi16s_new_dict.keys()))
-    id_vs_strain_df.columns = ['strain_name']
+    id_vs_strain_df.columns = ['variant_name']
     id_vs_strain_df['id'] = [id for k, [id, s] in ncbi16s_new_dict.items()]
     id_vs_strain_df['seq'] = [s for k, [id, s] in ncbi16s_new_dict.items()]
-    blast_out_best3 = pd.merge(blast_out_best2, id_vs_strain_df, on='strain_name')
+    blast_out_best3 = pd.merge(blast_out_best2, id_vs_strain_df, on='variant_name')
     if debug == 'True':
         print(blast_out_best3.head())
     
-    # Dictionary mapping strain name to the vregion sequence
-    strain_to_vreg_dict = blast_out_best3.groupby('strain_name').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
-    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['strain_name']==strain, 
+    # Dictionary mapping variant_name to the vregion sequence
+    strain_to_vreg_dict = blast_out_best3.groupby('variant_name').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
+    vartab_ncbi_df = pd.DataFrame([[id_vs_strain_df.loc[id_vs_strain_df['variant_name']==strain, 
         'id'].iloc[0], strain, 1, vreg] for strain, vreg in strain_to_vreg_dict.items()])
-    vartab_ncbi_df.columns = ['assembly_id', 'strain_name', 'count', 'sequence']
+    vartab_ncbi_df.columns = ['assembly_id', 'variant_name', 'count', 'sequence']
     vartab_ncbi_df_index_valid = (vartab_ncbi_df['sequence'].str.len() >= seq_min_len)
     vartab_ncbi_df = vartab_ncbi_df.loc[vartab_ncbi_df_index_valid]
     valid_strains = sum(vartab_ncbi_df_index_valid)
@@ -261,31 +260,25 @@ if __name__ == '__main__':
         
     # Filter out useless strain entries ? Default No.
     print('* Filtering out unidentified strains...', end='')
-    vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Bacterium')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[B|b]acteria')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Unidentified')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('producing[^b]bacterium')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('degrading[^b]bacterium')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[^_]+_[^_]+$')]
+    vartab_ncbi_filt_df = vartab_ncbi_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Bacterium')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[B|b]acteria')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Unidentified')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('producing[^b]bacterium')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('degrading[^b]bacterium')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[^_]+_[^_]+$')]
     # Strains with no strain designation (just genus species)
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Endocytic')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[A-Z]\\.')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('phytoplasma')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('mycoplasma')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[A-Z0-9]+_')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^[^_]+-like')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Deep-sea')]
-    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['strain_name'].str.contains('^Fe-oxidizing')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Endocytic')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[A-Z]\\.')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('phytoplasma')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('mycoplasma')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[A-Z0-9]+_')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^[^_]+-like')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Deep-sea')]
+    vartab_ncbi_filt_df = vartab_ncbi_filt_df.loc[~vartab_ncbi_df['variant_name'].str.contains('^Fe-oxidizing')]
     # Final table
-    vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True)
+    vartab_all_df = pd.concat([vartab_df, vartab_ncbi_df], ignore_index=True, sort=True)
     print('OK. (Combined: ', str(len(vartab_all_df)), 'rows)')
 
-    #
-    #   TABLE IS SAVED BEFORE LENGTH FILTERING STEP
-    #   LENGTH FILTER IS APPLIED ONLY TO FASTA
-    #   SIMPLY LENGTH FILTER EARLIER
-    #
-    #
     # Save new table
     print('* Saving table...', end='')
     vartab_all_df.to_csv(out_table, sep='\t', index=False)
@@ -296,10 +289,10 @@ if __name__ == '__main__':
     print('* Saving FASTA...', end='')
     with open(out_fasta, 'w') as out_f:
         for i in range(0, len(vartab_all_df)):
-            r = vartab_all_df.iloc[i]
+            row_i = vartab_all_df.iloc[i]
             # If the sequence is too short, omit it.
-            if len(r['sequence']) >= seq_min_len:
-                out_f.write('>'+r['strain_name']+'\n'+r['sequence']+'\n')
+            if len(row_i['sequence']) >= seq_min_len:
+                out_f.write('>'+row_i['variant_name']+'\n'+row_i['sequence']+'\n')
     print('OK.')
     # For each new sequence check if its exact match to any reference, if yes
     # just add it under the same variant_id.
