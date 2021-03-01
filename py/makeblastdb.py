@@ -23,7 +23,7 @@ def get_makedb_path ():
         return out.decode().strip()
 
 def main(in_fa, out_prefix):
-    print('Generating HiMAP database')
+    print('Generating RExMapDB BLAST database')
     makedb_path = get_makedb_path()
     makedb = Popen([makedb_path, '-dbtype', 'nucl', '-in', in_fa,
                              '-out', out_prefix], stdout=sys.stdout, stderr=sys.stderr)

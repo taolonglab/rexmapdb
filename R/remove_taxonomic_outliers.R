@@ -111,7 +111,7 @@ p(' OK.\n')
 
 
 
-p('* Filtering strains:')
+p('* Filtering strains:\n')
 # Strain names to exclude
 p('  - Double strain names...')
 strain_names = c()
@@ -251,20 +251,20 @@ p(' OK.\n')
 # Write filtered FASTA file
 p('* Generating new FASTA meta-data labels...')
 ref_fasta_new.dt = ref_fix.dt[
-  , .(strain_names=paste(unique(sort(sub('_@rrn[0-9]+', '', variant_name))), 
+  , .(strain_names=paste(unique(sort(sub('_@rrn[0-9]+', '', variant_name))),
                          collapse=','))
   , by=.(variant_id, copy_number, seq)][
-    , .(meta=paste0(.BY[[1]], '-', 
-             paste(copy_number, paste('(', strain_names, ')', sep=''), 
-                   sep=':', 
+    , .(meta=paste0(.BY[[1]], '-',
+             paste(copy_number, paste('(', strain_names, ')', sep=''),
+                   sep=':',
                    collapse=';')
              ))
     , by=.(variant_id, seq)]
 p(' OK.\n')
 
 p('* Writing output FASTA...')
-rexmap:::fasta_writer(meta=ref_fasta_new.dt[, meta], 
-                      seqs=ref_fasta_new.dt[, seq], 
+rexmap:::fasta_writer(meta=ref_fasta_new.dt[, meta],
+                      seqs=ref_fasta_new.dt[, seq],
                       output=out_fasta)
 p(' OK.\n')
 
