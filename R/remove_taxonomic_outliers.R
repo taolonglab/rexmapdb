@@ -79,7 +79,7 @@ ref_fasta_strainlabels = sapply(ref_fasta$meta, function (m)
 p('.')
 ref_fasta_strainlabels_list = lapply(ref_fasta_strainlabels, function (s)
   strsplit(s, ';', fixed=T))
-
+p(' OK.\n')
 
 # Input table
 p('* Loading input table...')
