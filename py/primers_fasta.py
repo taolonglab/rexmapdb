@@ -30,13 +30,13 @@ def parse_input():
         description='FASTA Filter.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
-    parser.add_argument('--input-nucl-codes', required=True, 
+    parser.add_argument('--input-nucl-codes', 
                         default='primers/nucleotide_codes.txt',
                         help='Input file with DNA nucleotide extended codes.')
-    parser.add_argument('--input-pcr-primers-table', required=True, 
+    parser.add_argument('--input-pcr-primers-table', 
                         default='primers/pcr_primers_table.txt',
                         help='Input file with a table of PCR primers..')
-    parser.add_argument('--output-pcr-primers-folder', required=True,
+    parser.add_argument('--output-pcr-primers-folder', 
                         default='data/pcr_primers',
                         help='Output folder with PCR primers files.')
     args = parser.parse_args()
