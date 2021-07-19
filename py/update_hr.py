@@ -321,7 +321,8 @@ if __name__ == '__main__':
     if rscript_path is None:
         sys.exit('\nError: Cannot find Rscript executable.')
     tax_outtab = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_variant_table+'.txt')
-    tax_outfa = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
+    # tax_outfa = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
+    tax_outfa = os.path.join(data_dir, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
     tax_outlier = os.path.join(data_dir, hr+'_excluded_outlier_strains.txt')
     sys.stdout.write('  Input files:\n')
     sys.stdout.write('  --input-table '+grp_outtab+'\n')
