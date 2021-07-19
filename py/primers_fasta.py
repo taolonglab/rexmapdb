@@ -27,7 +27,7 @@ from Bio.Seq import Seq
 
 def parse_input():
     parser = argparse.ArgumentParser(
-        description='FASTA Filter.',
+        description='Generate FASTAs of PCR primers.',
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('--input-nucl-codes', 
