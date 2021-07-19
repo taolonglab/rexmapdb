@@ -25,7 +25,7 @@ def parse_input():
     parser_req.add_argument('-d', '--data', required=True, 
                         help='Input rexmapdb/data directory.')
     parser_req.add_argument('-r', '--hypervar-region', required=True, 
-                        help='Hypervariable region database designation (e.g. V4-V5_515F-926R).')
+                        help='Hypervariable region database designation including primer labels (e.g. V4-V5_515F-926R).')
     # Optional arguments
     parser_opt = parser.add_argument_group('optional arguments')
     parser_opt.add_argument('--data-subfolder', action='store_true',
@@ -56,6 +56,11 @@ def parse_input():
                             help='Show full calls to external scripts.')
     parser_opt.add_argument('--overwrite', action='store_true',
                             help='Overwrite previously generated files.')
+    parser_opt.add_argument('--variant-table-suffix', default='',
+                            help='Suffix for the final text '+
+                            '(Used to be: _wrefseq_table_unique_variants_R).')
+    parser_opt.add_argument('--variant-blastdb-suffix', default='',
+                            help='Suffix for the BLAST database files.')
     args = parser.parse_args()
     return args
 
@@ -147,6 +152,9 @@ if __name__ == '__main__':
     show_calls = args.show_calls
     # multiplexed = args.multiplexed_database
     date = args.date
+    
+    suffix_variant_table = args.variant_table_suffix
+    suffix_blastdb_files = args.variant_blastdb_suffix
     
     # Check if we have multiple valid hypervariable regions in case we are
     # running a multiplexed database genenration
@@ -312,8 +320,8 @@ if __name__ == '__main__':
     rscript_path = get_rscript_path()
     if rscript_path is None:
         sys.exit('\nError: Cannot find Rscript executable.')
-    tax_outtab = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+'_wrefseq_table_unique_variants_R.txt')
-    tax_outfa = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+'_wrefseq_sequences_unique_variants_R.fasta')
+    tax_outtab = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_variant_table+'.txt')
+    tax_outfa = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
     tax_outlier = os.path.join(data_dir, hr+'_excluded_outlier_strains.txt')
     sys.stdout.write('  Input files:\n')
     sys.stdout.write('  --input-table '+grp_outtab+'\n')
