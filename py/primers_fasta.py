@@ -31,10 +31,10 @@ def parse_input():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     parser.add_argument('--input-nucl-codes', required=True, 
-                        default='data/nucleotide_codes.txt',
+                        default='primers/nucleotide_codes.txt',
                         help='Input file with DNA nucleotide extended codes.')
     parser.add_argument('--input-pcr-primers-table', required=True, 
-                        default='data/pcr_primers_table.txt',
+                        default='primers/pcr_primers_table.txt',
                         help='Input file with a table of PCR primers..')
     parser.add_argument('--output-pcr-primers-folder', required=True,
                         default='data/pcr_primers',
