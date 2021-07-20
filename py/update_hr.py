@@ -112,7 +112,7 @@ def get_date_from_asssum(filename):
 def calc_min_aln_len(hr, pct):
     """ Calculate minimum alignment length based on the hypervariable region
     string "hr". It has a format V[0-9]-V[0-9]_[0-9]+[a-zA-Z]+-[0-9]+[a-zA-Z]+"""
-    hr_re = re.compile(r"^.*V[0-9]-V[0-9]_([0-9]+)[a-zA-Z]+-([0-9]+)[a-zA-Z]+.*$")
+    hr_re = re.compile(r"^.*V[0-9][-]?[V]?[0-9]?_([0-9]+)[a-zA-Z]+-([0-9]+)[a-zA-Z]+.*$")
     hr_ml = abs(float(hr_re.match(hr).group(1)) - float(hr_re.match(hr).group(2)))*(1-pct/100)
     return(hr_ml)
 
