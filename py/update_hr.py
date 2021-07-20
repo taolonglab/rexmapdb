@@ -165,8 +165,13 @@ if __name__ == '__main__':
     if not count_inputs['success']:
         sys.exit('\nError: Some or all input files not found.')
     
+    data_dir_main = data_dir
     if subfolder:
         data_dir = os.path.join(data_dir, hr)
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+            sys.stdout.write('Using subfolder: '+hr)
+            sys.stdout.write('Created output dir: '+data_dir)        
         
     sys.stdout.write('Output files written to: '+data_dir+'\n')
     
@@ -217,7 +222,7 @@ if __name__ == '__main__':
     sys.stdout.write('  --min-seq-len '+str(ml)+'\n')
     sys.stdout.write('  --overhang '+str(overhang)+'\n')
     sys.stdout.write('  --hypervar-region-filter '+hr+'\n')
-    sys.stdout.write('  --nthreads'+str(nthreads)+'\n')
+    sys.stdout.write('  --nthreads '+str(nthreads)+'\n')
     
     if os.path.exists(count_fa_out) and os.path.exists(count_tab_out) and not overwrite:
         sys.stdout.write('  count.py already completed.\n')
@@ -244,7 +249,7 @@ if __name__ == '__main__':
     
     #------------------------ add_refseq.py -----------------------------------
     sys.stdout.write('Add RefSeq\n')
-    ng_16s_fasta = find_latest_nongenome_16s_fasta(data_dir)
+    ng_16s_fasta = find_latest_nongenome_16s_fasta(data_dir_main)
     if not ng_16s_fasta['success']:
         sys.exit('\nError: Non-genome 16S fasta not found.')
     sys.stdout.write('  Input files:\n')
@@ -260,8 +265,7 @@ if __name__ == '__main__':
     sys.stdout.write('  --output-fasta '+addrefseq_outfa+'\n')
     sys.stdout.write('  Options:\n')
     sys.stdout.write('  --min-seq-len '+str(overhang)+'\n')
-    sys.stdout.write('  --overhang '+str(ml)+'\n')
-    
+    sys.stdout.write('  --overhang '+str(ml)+'\n')    
     
     if not os.path.exists(addrefseq_outtab) or not os.path.exists(addrefseq_outfa) or overwrite:
         addrefseq_call = ' '.join([python_path, 'py/add_refseq.py', 
