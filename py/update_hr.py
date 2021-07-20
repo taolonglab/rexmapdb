@@ -26,12 +26,10 @@ def log(x, end_line=True, time_stamp=True, force_end_line=True):
     if time_stamp:
         date_time_obj = datetime.now()
         prefix = date_time_obj.strftime("%Y-%m-%d %H:%M:%S | ")
+    if force_end_line and x[-1] == '\n':
+        x = x[:-1]        
     if end_line:
         suffix = '\n'
-    else:
-        if force_end_line:
-            if x[-1] == '\n':
-                x = x[:-1]
     sys.stdout.write(prefix+x+suffix)
 
 def parse_input():
