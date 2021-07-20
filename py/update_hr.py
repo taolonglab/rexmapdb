@@ -9,28 +9,11 @@ Created on Sun Mar 28 17:32:48 2021
 """
 
 import argparse
-from datetime import datetime
 import os, sys, glob, re
-from subprocess import Popen, PIPE
+from subprocess import Popen
+from _include import log, get_python_path, get_rscript_path
 
 script_title = 'RExMapDB update specific hypervariable region database'
-
-def log(x, end_line=True, time_stamp=True, force_end_line=True):
-    """ Log current progress. Writes x to stdout with a time_stamp if 
-    set to True. Line is terminated if end_line is true. If end_line==False
-    and x contains \n last character, then the \n gets removed if the
-    force_end_line == True. """
-    
-    prefix = ''
-    suffix = ''
-    if time_stamp:
-        date_time_obj = datetime.now()
-        prefix = date_time_obj.strftime("%Y-%m-%d %H:%M:%S | ")
-    if force_end_line and x[-1] == '\n':
-        x = x[:-1]        
-    if end_line:
-        suffix = '\n'
-    sys.stdout.write(prefix+x+suffix)
 
 def parse_input():
     parser = argparse.ArgumentParser(
@@ -133,24 +116,6 @@ def calc_min_aln_len(hr, pct):
     hr_re = re.compile(r"^.*V[0-9][-]?[V]?[0-9]?_([0-9]+)[a-zA-Z]+-([0-9]+)[a-zA-Z]+.*$")
     hr_ml = abs(float(hr_re.match(hr).group(1)) - float(hr_re.match(hr).group(2)))*(1-pct/100)
     return(hr_ml)
-
-def get_python_path ():
-    """ Generate an absolute python3 path. """
-    cmd = Popen('which python3', shell=True, stdout=PIPE, stderr=PIPE)
-    out, err = cmd.communicate()
-    if out == b'':
-        return None
-    else:
-        return out.decode().strip()
-
-def get_rscript_path ():
-    """ Generate an absolute Rscript path. """
-    cmd = Popen('which Rscript', shell=True, stdout=PIPE, stderr=PIPE)
-    out, err = cmd.communicate()
-    if out == b'':
-        return None
-    else:
-        return out.decode().strip()
 
 
 if __name__ == '__main__':

@@ -11,9 +11,10 @@ Created on Mon Nov 20 16:08:06 2017
 
 @author: igor
 """
-import re, sys
+import re
 import argparse
 import pandas as pd
+from _include import log
 
 script_title = 'Group unique sequences.'
 
@@ -135,12 +136,11 @@ if __name__ == '__main__':
     # fasta_filename = sys.argv[2]
     # table_output = sys.argv[3]
     # fasta_output = sys.argv[4]
-    print(script_title)
+    log(script_title)
     args = parse_input()
     table_filename = args.input_table
     fasta_filename = args.input_fasta
     table_output = args.output_table
     fasta_output = args.output_fasta    
     main(table_filename, fasta_filename, table_output, fasta_output)
-    print('Done.')
-
+    log('Done.')

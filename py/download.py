@@ -12,6 +12,7 @@
 import sys
 import os
 import pycurl
+from _include import log
 
 # We should ignore SIGPIPE when using pycurl.NOSIGNAL - see
 # the libcurl tutorial for more info.
@@ -32,7 +33,7 @@ try:
     if len(sys.argv) == 3:
         num_conn = int(sys.argv[2])
 except:
-    print("Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0])
+    log("Usage: %s <file with URLs to fetch> [<# of concurrent connections>]" % sys.argv[0])
     raise SystemExit
 
 
@@ -52,8 +53,8 @@ assert queue, "no URLs given"
 num_urls = len(queue)
 num_conn = min(num_conn, num_urls)
 assert 1 <= num_conn <= 10000, "invalid number of concurrent connections"
-print("PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM))
-print("----- Getting", num_urls, "URLs using", num_conn, "connections -----")
+log("PycURL %s (compiled against 0x%x)" % (pycurl.version, pycurl.COMPILE_LIBCURL_VERSION_NUM))
+log("----- Getting", num_urls, "URLs using", num_conn, "connections -----")
 
 
 # Pre-allocate a list of curl objects
@@ -77,7 +78,7 @@ num_failed = 0
 while num_processed < num_urls:
     # Check if the file aready exist, and if it does check the file size (to do)
     if num_processed % 10 == 0 or num_processed == num_urls-1:
-        print('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed), end='')
+        log('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed), end='')
     if len(queue) < 1:
         break
     # If file exists, don't download it again. THIS DOES NOT CHECK INCOMPLETE DOWNLOADS!
@@ -133,4 +134,4 @@ for c in m.handles:
         c.fp = None
     c.close()
 m.close()
-print('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed))
+log('\r- processed % 5d out of % 5d ( % 4d failed)' % (num_processed, num_urls, num_failed))

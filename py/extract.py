@@ -15,6 +15,7 @@ import gzip, os, sys
 import argparse
 import pandas as pd
 from Bio import SeqIO
+from _include import log
 
 script_title = 'Extract 16S sequences from full genomes.'
 
@@ -48,8 +49,8 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
     
     #%% load gff annotation for each entry
     # seqs = defaultdict(list)
-    print('Extract 16S sequences from full genomes')
-    print('* matching feature names: ' + str(match_str))
+    log('Extract 16S sequences from full genomes')
+    log('* matching feature names: ' + str(match_str))
     
     #
     # If FASTA file already exists, extract all already processed entries
@@ -61,9 +62,9 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
     last_assid = ''
     i0 = 0
     if os.path.isfile(fa_out_name) and fa_out_exist_action == 'append':
-        print('* output '+fa_out_name+' already exists: ', end='')
+        log('* output '+fa_out_name+' already exists: ', end='')
         if fa_out_exist_action == 'append':
-            print('appending to file...', end='')
+            log('appending to file...', end='')
             with open(fa_out_name, 'r') as f_out:
                 exist_count = 0
                 for record in SeqIO.parse(f_out, 'fasta'):
@@ -74,20 +75,20 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                 i0 = ass.index[ass['# assembly_accession'] == last_assid].tolist()[0]                    
             except IndexError:
                 i0 = 0
-            print('OK. Added % 5d sequences.' % (exist_count))
+            log('OK. Added % 5d sequences.' % (exist_count))
             write_mode = 'a'
         elif fa_out_exist_action == 'overwrite':
-            print('overwriting!')
+            log('overwriting!')
             write_mode = 'w'
         else:
-            print('wrong exist action!')
+            log('wrong exist action!')
             sys.exit('Execution stopped due to wrong fa_out_exist_action.')        
     else:
         write_mode = 'w'
     
-    print('* extracting sequences with lengths: ' + str(len_min) + ' <= len <= ' + str(len_max))
+    log('* extracting sequences with lengths: ' + str(len_min) + ' <= len <= ' + str(len_max))
     with open(fa_out_name, write_mode) as fa_out:
-        print('* writing file ' + fa_out_name + '...')
+        log('* writing file ' + fa_out_name + '...')
         n_wrong_len = 0
         n_missing_assids = 0 # Keep track of missing records
         n_empty_assids = 0 # Keep track of the number of empty records (either GFF.GZ or FNA.GZ)
@@ -95,7 +96,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
         
         for i in range(i0, len(ass)): 
             
-            print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
+            log('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
                     n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids), end='')
             
             ass_id = ass.iloc[i]['# assembly_accession']
@@ -175,7 +176,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
                     continue
                 
         # Last progress bar after we're done.        
-        print('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
+        log('\r* % 5d out of % 5d assemblies (miss: % 4d, empty % 4d, % 5d seqs diff len, exist: % 4d).' % (i, len(ass),
             n_missing_assids, n_empty_assids, n_wrong_len, n_existing_assids))
 
             
@@ -217,7 +218,7 @@ if __name__ == '__main__':
     #     action = sys.argv[5]
     # else:
     #     action = 'append'
-    print(script_title)
+    log(script_title)
     args = parse_input()
     
     in_file = args.input_asssum

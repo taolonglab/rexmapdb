@@ -7,8 +7,8 @@ Created on Sun May 20 13:42:31 2018
 """
 import sys, os
 import argparse
-from count import get_os
 from subprocess import Popen, PIPE
+from _include import log, get_os
 
 
 def get_makedb_path ():
@@ -23,7 +23,7 @@ def get_makedb_path ():
         return out.decode().strip()
 
 def main(in_fa, out_prefix):
-    print('Generating RExMapDB BLAST database')
+    log('Generating RExMapDB BLAST database')
     makedb_path = get_makedb_path()
     makedb = Popen([makedb_path, '-dbtype', 'nucl', '-in', in_fa,
                              '-out', out_prefix], stdout=sys.stdout, stderr=sys.stderr)

@@ -26,33 +26,12 @@ Created on Thu Jul 27 13:27:07 2017
 """
 
 import argparse
-import sys, os, re, platform
+import os, re
 import pandas as pd
 from io import StringIO
 from subprocess import Popen, PIPE
-from threading import active_count
-
-def get_os ():
-    """ Detect operating system. """
-    os_sys = platform.system()
-    if os_sys == 'Linux':
-        return 'linux'
-    elif os_sys == 'Darwin':
-        return 'macos'
-    else:
-        return ''
-    
-# Script folder sys.path[0]
-
-def get_blast_path ():
-    """ Generate an absolute BLAST path. """
-    blastn = Popen('which blastn', shell=True, stdout=PIPE, stderr=PIPE)
-    out, err = blastn.communicate()
-    if out == b'':
-        sys_os = get_os()
-        return os.path.join(os.path.dirname(sys.path[0]), 'bin', 'blastn_'+sys_os)
-    else:
-        return out.decode().strip()
+from _include import log, get_blast_path
+# from threading import active_count
 
 
 def fasta_to_df (input_fa):
@@ -129,17 +108,6 @@ def blast_primers_vs_sequences (primer_file, sequences_fa, blast_path='/usr/loca
                                 blast_format='"6 qseqid sseqid pident length mismatch gapopen qstart qend sstart send evalue bitscore score"'):
     """ Blast primers vs blast db made out of full 16S sequences. Return the output
     as Blast outfmt 6 data frame. """
-    
-    # if get_os() == 'linux':
-    #     try:
-    #         nthreads = int(os.popen('grep -c cores /proc/cpuinfo').read())
-    #     except:
-    #         nthreads = 4
-    # else:
-    #     try:
-    #         nthreads = int(active_count())
-    #     except:
-    #         nthreads = 4
         
     blast = Popen(' '.join([blast_path, '-subject', primer_file, '-query', sequences_fa, 
                    '-word_size', str(blast_ws), '-outfmt', blast_format, '-strand', 'both',
@@ -189,14 +157,14 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
          blast_path='/usr/local/ncbi/blast/bin/blastn', overhang=21, 
          min_len=200, primer_file_filter='V', nthreads=4):
     
-    print('Count 16S hypervariable regions')
+    log('Count 16S hypervariable regions')
     # Load full genome assembly 16S sequences
     
     # If we want to process only specific primer set add it here as a string
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
-    print('* Minimum sequence length:', str(min_len), 'nt')
-    print('* Load files: ', end='')
+    log('  Minimum sequence length:', str(min_len), 'nt')
+    log('  Load files: ', end='')
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
     
@@ -229,16 +197,16 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
 
     # Generate a dictionary between accession id and strain name for easy access later
     ass_to_strain_dict = ass_df[['ass_id', 'strain_name']].set_index('ass_id').to_dict()['strain_name']
-    print('OK.')
-    print('* BLAST path: '+blast_path)
+    log('OK.')
+    log('  BLAST path: '+blast_path)
     
     # Iterate over each primer pair combination
     for primer_file in primer_files:
         
-        print('* Primer FASTA: '+primer_file)
-        print('* Assembly FASTA (Archaea): '+ass_fasta_a)
-        print('* Assembly FASTA (Bacteria): '+ass_fasta_b)
-        print('\r* '+os.path.splitext(os.path.basename(primer_file))[0]+': blast...', end='')
+        log('  Primer FASTA: '+primer_file)
+        log('  Assembly FASTA (Archaea): '+ass_fasta_a)
+        log('  Assembly FASTA (Bacteria): '+ass_fasta_b)
+        log('  '+os.path.splitext(os.path.basename(primer_file))[0]+': blast...', end=False)
         # Run BLAST with 16s sequences vs PCR primer sequences
         blast_out_a_df = blast_primers_vs_sequences(primer_file, ass_fasta_a, blast_path, nthreads=nthreads)
         blast_out_b_df = blast_primers_vs_sequences(primer_file, ass_fasta_b, blast_path, nthreads=nthreads)
@@ -246,7 +214,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
         blast_out_df[13] = 'Forward'
         blast_out_df.loc[blast_out_df[1].str.startswith('Reverse'), 13] = 'Reverse'
         
-        print('OK best...', end='')
+        log('OK best...', end=False, time_stamp=False)
         # For each sequence (0) and primer type (12) keep only the highest hit by
         # bitscore (11)
         blast_out_best = blast_out_df.iloc[blast_out_df.groupby([0, 13]).apply(lambda t: t[11].idxmax())]
@@ -273,7 +241,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
         blast_out_best3 = pd.merge(blast_out_best2, ass_to_seq_df, on='meta')
         # blast_out_best3['v_seq'] = blast_out_best3.apply(
         #        lambda df: df['seq'][df['seq_start']:df['seq_end']+1], axis=1)
-        print('OK v-regions...', end='')        
+        log('OK v-regions...', end=False, time_stamp=False)        
         
         # Extract v-regions (this takes a while) into a dictionary
         ass_to_vreg_dict = blast_out_best3.groupby('meta').apply(lambda x: blast_out_vregion(x, overhang)).to_dict()
@@ -290,7 +258,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
                 assid_to_vreg_dict[assid][seq] = 1
             else:
                 assid_to_vreg_dict[assid][seq] += 1
-        print('OK write.', end='')
+        log('OK write.', end=False, time_stamp=False)
 
         # Now iterate over dictionary and save the counts to file
         counts_filename = os.path.join(fasta_out_dir,
@@ -323,12 +291,12 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
         blast_out_best2.to_csv(primer_dir+'/'+os.path.splitext(os.path.basename(primer_file))[0]+'_blast.txt', 
                                sep='\t', index=False)
         
-        print('.', end='')
+        log('.', end=False, time_stamp=False)
         # Save 16S with missing 1+ primer alignment to file
         pd.DataFrame(strain_miss_primer).to_csv(
                 primer_dir+'/'+os.path.splitext(os.path.basename(primer_file))[0]+'_primer_miss.txt',
                 sep='\t', index=False)
-        print('.OK')
+        log('.OK', time_stamp=False)
 
 
 def parse_input():
@@ -374,30 +342,7 @@ if __name__ == '__main__':
     overhang = int(args.overhang)
     min_len = int(args.min_seq_len)
     filter = args.hypervar_region_filter
-    nthreads = int(args.nthreads)
-    
-    # ass_fasta_a = sys.argv[1]       # Assembly FASTA for archaea
-    # ass_fasta_b = sys.argv[2]       # Assembly FASTA for bacteria
-    # assembly_file_a = sys.argv[3]   # Assembly summary filtered for archaea
-    # assembly_file_b = sys.argv[4]   # Assembly summary filtered for bacteria
-    # primer_dir = sys.argv[5]        # Folder with FASTA files for PCR primers
-    # fasta_out_dir = sys.argv[6]     # Output folder for the final FASTA and table
-    
-    # if len(sys.argv) >= 8:          # Argument 7 is overhang
-    #     overhang = sys.argv[7]
-    # else:
-    #     overhang = 0
-    
-    # if len(sys.argv) >= 9:          # Argument 8 is minimum acceptable tag length
-    #     min_len = int(sys.argv[8])       # after primer alignment.
-    # else:
-    #     min_len = 200
-    
-    # if len(sys.argv) >= 10:          # Argument 9 is text filter for hypervariable region
-    #     filter = sys.argv[9]
-    # else:
-    #     filter = 'V'
-        
+    nthreads = int(args.nthreads)    
     
     main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b, primer_dir, 
          fasta_out_dir, blast_path = get_blast_path(), min_len=min_len,
