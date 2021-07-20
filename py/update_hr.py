@@ -9,10 +9,30 @@ Created on Sun Mar 28 17:32:48 2021
 """
 
 import argparse
+from datetime import datetime
 import os, sys, glob, re
 from subprocess import Popen, PIPE
 
 script_title = 'RExMapDB update specific hypervariable region database'
+
+def log(x, end_line=True, time_stamp=True, force_end_line=True):
+    """ Log current progress. Writes x to stdout with a time_stamp if 
+    set to True. Line is terminated if end_line is true. If end_line==False
+    and x contains \n last character, then the \n gets removed if the
+    force_end_line == True. """
+    
+    prefix = ''
+    suffix = ''
+    if time_stamp:
+        date_time_obj = datetime.now()
+        prefix = date_time_obj.strftime("%Y-%m-%d %H:%M:%S | ")
+    if end_line:
+        suffix = '\n'
+    else:
+        if force_end_line:
+            if x[-1] == '\n':
+                x = x[:-1]
+    sys.stdout.write(prefix+x+suffix)
 
 def parse_input():
     parser = argparse.ArgumentParser(
@@ -170,10 +190,10 @@ if __name__ == '__main__':
         data_dir = os.path.join(data_dir, hr)
         if not os.path.exists(data_dir):
             os.makedirs(data_dir)
-            sys.stdout.write('Using subfolder: '+hr)
-            sys.stdout.write('Created output dir: '+data_dir)        
+            log('Using subfolder: '+hr)
+            log('Created output dir: '+data_dir)        
         
-    sys.stdout.write('Output files written to: '+data_dir+'\n')
+    log('Output files written to: '+data_dir)
     
     latest_date_method = ''
     if date is None:
@@ -184,13 +204,13 @@ if __name__ == '__main__':
         latest_date = date
         latest_date_method = '(user)'
     
-    sys.stdout.write('Database date/version '+latest_date_method+': '+latest_date+'\n')
+    log('Database date/version '+latest_date_method+': '+latest_date)
     # sys.stdout.write('Output files will have the HYPERVARIABLE-REGION_DATE_hangOVERHANG prefix.\n')
-    sys.stdout.write('Count\n')    
-    sys.stdout.write('  Input:\n')
+    log('Count')    
+    log('  Input:')
     for k, v in count_inputs.items():
         if k != 'success':
-            sys.stdout.write('  --'+k+' '+v+'\n')
+            log('  --'+k+' '+v+'\n')
     
     # Check if PCR primer fasta file exists
     hr_fasta = os.path.join(primer_dir, hr+'.fasta')
@@ -214,18 +234,18 @@ if __name__ == '__main__':
         os.path.splitext(os.path.basename(count_inputs['input-fasta-archaea'].replace('archaea_', '')))[0]+
         '_'+hr+'_hang'+str(overhang)+'_counts.txt'
     )
-    sys.stdout.write('  --input-pcr-primers-folder '+primer_dir+'\n')
-    sys.stdout.write('  --hypervar-region-filter '+hr+'\n')
-    sys.stdout.write('  Output:\n')
-    sys.stdout.write('  --output-dir '+data_dir+'\n')
-    sys.stdout.write('  Options:\n')
-    sys.stdout.write('  --min-seq-len '+str(ml)+'\n')
-    sys.stdout.write('  --overhang '+str(overhang)+'\n')
-    sys.stdout.write('  --hypervar-region-filter '+hr+'\n')
-    sys.stdout.write('  --nthreads '+str(nthreads)+'\n')
+    log('  --input-pcr-primers-folder '+primer_dir+'\n')
+    log('  --hypervar-region-filter '+hr+'\n')
+    log('  Output:\n')
+    log('  --output-dir '+data_dir+'\n')
+    log('  Options:\n')
+    log('  --min-seq-len '+str(ml)+'\n')
+    log('  --overhang '+str(overhang)+'\n')
+    log('  --hypervar-region-filter '+hr+'\n')
+    log('  --nthreads '+str(nthreads)+'\n')
     
     if os.path.exists(count_fa_out) and os.path.exists(count_tab_out) and not overwrite:
-        sys.stdout.write('  count.py already completed.\n')
+        log('  count.py already completed.\n')
     else:
         # Run count.py if --overwrite is given or any of the files are missing
         count_path = os.path.join(os.path.dirname(sys.path[0]), 'py', 'count.py')
@@ -241,31 +261,31 @@ if __name__ == '__main__':
                               '--hypervar-region-filter', hr,
                               '--nthreads', str(nthreads)])
         if show_calls:
-            sys.stdout.write('  Count call: '+count_call+'\n')
+            log('  Count call: '+count_call+'\n')
         count_cmd = Popen(count_call, shell=True)
         out, err = count_cmd.communicate()
         if out == b'':
             sys.exit('\nError: running count.py call.')
     
     #------------------------ add_refseq.py -----------------------------------
-    sys.stdout.write('Add RefSeq\n')
+    log('Add RefSeq\n')
     ng_16s_fasta = find_latest_nongenome_16s_fasta(data_dir_main)
     if not ng_16s_fasta['success']:
         sys.exit('\nError: Non-genome 16S fasta not found.')
-    sys.stdout.write('  Input files:\n')
-    sys.stdout.write('  --input-nongenome-16s-fasta '+ng_16s_fasta['input-nongenome-16s-fasta']+'\n')
+    log('  Input files:\n')
+    log('  --input-nongenome-16s-fasta '+ng_16s_fasta['input-nongenome-16s-fasta']+'\n')
     
     addrefseq_outtab = os.path.join(data_dir, hr+'_hang'+str(overhang)+'_wrefseq_table.txt')
     addrefseq_outfa = os.path.join(data_dir, hr+'_hang'+str(overhang)+'_wrefseq_sequences.fasta')
-    sys.stdout.write('  --input-genome-16s-counts '+count_tab_out+'\n')
-    sys.stdout.write('  --input-genome-16s-fasta '+count_fa_out+'\n')
-    sys.stdout.write('  --input-pcr-primers-fasta '+hr_fasta+'\n')
-    sys.stdout.write('  Output files:\n')
-    sys.stdout.write('  --output-table '+addrefseq_outtab+'\n')
-    sys.stdout.write('  --output-fasta '+addrefseq_outfa+'\n')
-    sys.stdout.write('  Options:\n')
-    sys.stdout.write('  --min-seq-len '+str(overhang)+'\n')
-    sys.stdout.write('  --overhang '+str(ml)+'\n')    
+    log('  --input-genome-16s-counts '+count_tab_out+'\n')
+    log('  --input-genome-16s-fasta '+count_fa_out+'\n')
+    log('  --input-pcr-primers-fasta '+hr_fasta+'\n')
+    log('  Output files:\n')
+    log('  --output-table '+addrefseq_outtab+'\n')
+    log('  --output-fasta '+addrefseq_outfa+'\n')
+    log('  Options:\n')
+    log('  --min-seq-len '+str(overhang)+'\n')
+    log('  --overhang '+str(ml)+'\n')    
     
     if not os.path.exists(addrefseq_outtab) or not os.path.exists(addrefseq_outfa) or overwrite:
         addrefseq_call = ' '.join([python_path, 'py/add_refseq.py', 
@@ -278,13 +298,13 @@ if __name__ == '__main__':
                               '--min-seq-len', str(ml),
                               '--overhang', str(overhang)])
         if show_calls:
-            sys.stdout.write('  Add_RefSeq call: '+addrefseq_call+'\n')
+            log('  Add_RefSeq call: '+addrefseq_call+'\n')
         addrefseq_cmd = Popen(addrefseq_call, shell=True)
         out, err = addrefseq_cmd.communicate()
         if out == b'':
             sys.exit('\nError: running add_refseq.py call.')
     else:
-        sys.stdout.write('  add_refseq.py already completed.\n')
+        log('  add_refseq.py already completed.\n')
     
     #---------------- Optional multiplexed database --------------------------
 #     python3 /data/rexmapdb/py/combine_renumerate.py \
@@ -294,15 +314,15 @@ if __name__ == '__main__':
 
     
     #------------------------ Group ------------------------------------------
-    sys.stdout.write('Group\n')
+    log('Group\n')
     grp_outtab = os.path.join(data_dir, hr+'_hang'+str(overhang)+'_wrefseq_table_unique_variants.txt')
     grp_outfa = os.path.join(data_dir, hr+'_hang'+str(overhang)+'_wrefseq_sequences_unique_variants.fasta')
-    sys.stdout.write('  Input files:\n')
-    sys.stdout.write('  --input-table '+addrefseq_outtab+'\n')
-    sys.stdout.write('  --input-fasta '+addrefseq_outfa+'\n')
-    sys.stdout.write('  Output files:\n')
-    sys.stdout.write('  --output-table '+grp_outtab+'\n')
-    sys.stdout.write('  --output-fasta '+grp_outfa+'\n')
+    log('  Input files:\n')
+    log('  --input-table '+addrefseq_outtab+'\n')
+    log('  --input-fasta '+addrefseq_outfa+'\n')
+    log('  Output files:\n')
+    log('  --output-table '+grp_outtab+'\n')
+    log('  --output-fasta '+grp_outfa+'\n')
     
     if not os.path.exists(grp_outtab) or not os.path.exists(grp_outfa) or overwrite:
         grp_call = ' '.join([python_path, 'py/group.py', 
@@ -311,16 +331,16 @@ if __name__ == '__main__':
                               '--output-table', grp_outtab,
                               '--output-fasta', grp_outfa])
         if show_calls:
-            sys.stdout.write('  Group call: '+grp_call+'\n')
+            log('  Group call: '+grp_call+'\n')
         grp_cmd = Popen(grp_call, shell=True)
         out, err = grp_cmd.communicate()
         if out == b'':
             sys.exit('\nError: running group.py call.')
     else:
-        sys.stdout.write('  group.py already completed.\n')
+        log('  group.py already completed.\n')
     
     #------------------- Remove taxonomic outliers ---------------------------
-    sys.stdout.write('Remove taxonomic outliers\n')
+    log('Remove taxonomic outliers\n')
     rscript_path = get_rscript_path()
     if rscript_path is None:
         sys.exit('\nError: Cannot find Rscript executable.')
@@ -328,16 +348,16 @@ if __name__ == '__main__':
     # tax_outfa = os.path.join(db_path, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
     tax_outfa = os.path.join(data_dir, hr+'_'+latest_date+'_hang'+str(overhang)+suffix_blastdb_files+'.fasta')
     tax_outlier = os.path.join(data_dir, hr+'_excluded_outlier_strains.txt')
-    sys.stdout.write('  Input files:\n')
-    sys.stdout.write('  --input-table '+grp_outtab+'\n')
-    sys.stdout.write('  --input-fasta '+grp_outfa+'\n')
-    sys.stdout.write('  Output files:\n')
-    sys.stdout.write('  --output-table '+tax_outtab+'\n')
-    sys.stdout.write('  --output-fasta '+tax_outfa+'\n')
-    sys.stdout.write('  --output-excl '+tax_outlier+'\n')
+    log('  Input files:\n')
+    log('  --input-table '+grp_outtab+'\n')
+    log('  --input-fasta '+grp_outfa+'\n')
+    log('  Output files:\n')
+    log('  --output-table '+tax_outtab+'\n')
+    log('  --output-fasta '+tax_outfa+'\n')
+    log('  --output-excl '+tax_outlier+'\n')
     if not os.path.exists(db_path):
         os.makedirs(db_path)
-        sys.stdout.write('  Output database folder created: '+db_path+'\n')
+        log('  Output database folder created: '+db_path+'\n')
     
     if not os.path.exists(tax_outtab) or not os.path.exists(tax_outfa) or overwrite:
         tax_call = ' '.join([rscript_path, '--vanilla', 'R/remove_taxonomic_outliers.R', 
@@ -347,16 +367,16 @@ if __name__ == '__main__':
                               '--output-fasta', tax_outfa,
                               '--output-excl', tax_outlier])
         if show_calls:
-            sys.stdout.write('  Remove taxonomic outliers call: '+tax_call+'\n')
+            log('  Remove taxonomic outliers call: '+tax_call+'\n')
         tax_cmd = Popen(tax_call, shell=True)
         out, err = tax_cmd.communicate()
         if out == b'':
             sys.exit('\nError: running remove_taxonomic_outliers.R call.')
     else:
-        sys.stdout.write('  remove_taxonomic_outliers.R already completed.\n')
+        log('  remove_taxonomic_outliers.R already completed.\n')
     
     #------------------- Generate database -----------------------------------
-    sys.stdout.write('Generate BLAST database\n')
+    log('Generate BLAST database\n')
     # python3 ../rexmapdb/py/makeblastdb.py \
     # --input-fasta database/V4-V5_515F-926R_hang22_2021-02-13_wrefseq_sequences_unique_variants_R.fasta \
     # --out-db-prefix database/V4-V5_515F-926R_hang22_2021-02-13_wrefseq
@@ -365,14 +385,14 @@ if __name__ == '__main__':
                         '--input-fasta', tax_outfa,
                         '--out-db-prefix', db_outpre])
     if show_calls:
-        sys.stdout.write('  Make BLAST DB call: '+db_call+'\n')
+        log('  Make BLAST DB call: '+db_call+'\n')
     db_cmd = Popen(db_call, shell=True)
     out, err = db_cmd.communicate()
     if out == b'':
         sys.exit('\nError: running makeblastdb.py.')
-    sys.stdout.write('  makeblastdb.py completed.\n')
+    log('  makeblastdb.py completed.\n')
 
-    sys.stdout.write('Done.\n')
+    log('Done.\n')
     
     
     
