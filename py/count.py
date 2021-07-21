@@ -163,7 +163,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
     # If we want to process only specific primer set add it here as a string
     # with exact match to the FASTA filename (output from primer_all_combinations.py)
     #  primer_file_filter = 'V3-V4_341F-805R'
-    log('  Minimum sequence length:', str(min_len), 'nt')
+    log('  Minimum sequence length: '+str(min_len)+' nt')
     log('  Load files: ', end='')
     # Overhang from each V-region. Need this to make sure we align full query.
     overhang = int(overhang)
@@ -197,7 +197,7 @@ def main(ass_fasta_a, ass_fasta_b, assembly_file_a, assembly_file_b,
 
     # Generate a dictionary between accession id and strain name for easy access later
     ass_to_strain_dict = ass_df[['ass_id', 'strain_name']].set_index('ass_id').to_dict()['strain_name']
-    log('OK.')
+    log('OK.', time_stamp=False)
     log('  BLAST path: '+blast_path)
     
     # Iterate over each primer pair combination

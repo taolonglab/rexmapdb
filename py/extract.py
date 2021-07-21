@@ -86,7 +86,7 @@ def main(ass_sub, fa_out_name, ass_f_dir='features/', ass_s_dir='sequences/',
     else:
         write_mode = 'w'
     
-    log('* extracting sequences with lengths: ' + str(len_min) + ' <= len <= ' + str(len_max))
+    log('* extracting sequences with lengths: '+str(len_min)+' <= len <= '+str(len_max))
     with open(fa_out_name, write_mode) as fa_out:
         log('* writing file ' + fa_out_name + '...')
         n_wrong_len = 0

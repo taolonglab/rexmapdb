@@ -120,7 +120,7 @@ def calc_min_aln_len(hr, pct):
 
 if __name__ == '__main__':
     
-    print(script_title)
+    log('---------'+script_title+'---------')
     args = parse_input()
     data_dir = args.data
     subfolder = args.data_subfolder

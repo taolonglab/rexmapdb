@@ -10,6 +10,7 @@ import re
 import sys
 import pandas as pd
 import argparse
+from _include import log
 
 
 
@@ -41,7 +42,7 @@ def write_df_to_fasta (df, out_fa, meta_col='meta', seq_col='sequence'):
 
 
 if __name__ == '__main__':
-    sys.stdout.write('\nCombiner and renumerator.\n')
+    log('\nCombiner and renumerator.\n')
     
     args = parse_input()
     # print(args)
@@ -51,28 +52,24 @@ if __name__ == '__main__':
     output_fasta = args.out_fasta
     
     # Load tables into a list of data frames then use pd.concat
-    sys.stdout.write('* Loading INPUT tables...')
-    sys.stdout.flush()
+    log('  Loading INPUT tables...')
     tables_df_list = [pd.read_table(t, sep='\t') for t in tables]
-    sys.stdout.write(' OK.\n')
-    sys.stdout.write('* Concatenating...')
-    sys.stdout.flush()
+    log(' OK.\n')
+    log(' Concatenating...')
     tables_df = pd.concat(tables_df_list)
-    sys.stdout.write(' OK.\n')
+    log(' OK.\n')
     
     # Generate strain names
-    sys.stdout.write('* Generating strain names...')
-    sys.stdout.flush()
+    log('  Generating strain names...')
     if 'strain_name' in tables_df.columns:
         tables_df.rename(columns={'strain_name':'variant_name'}, inplace=True)
     tables_df['strain_name'] = [re.sub('_@rrn[0-9]+$', '', x) for x in 
                                 tables_df['variant_name']]
-    sys.stdout.write(' OK.\n')
+    log(' OK.\n')
 
     # Relabel variant names (take into account all unique sequences from all
     # hypervariable regions)
-    sys.stdout.write('* Renumerating sequences...')
-    sys.stdout.flush()
+    log('  Renumerating sequences...')
     tables_df_straingroups = tables_df.groupby('strain_name')
     tables_renum_list = list()
     for i, table_group in enumerate(tables_df_straingroups):
@@ -86,16 +83,15 @@ if __name__ == '__main__':
         tables_renum_list.append(table_renum)
     # tables_df['variant_name'] = 
     tables_renum_df = pd.concat(tables_renum_list)
-    sys.stdout.write(' OK.\n')
+    log(' OK.\n')
 
     # Write output table and FASTA for the combined sequences
-    sys.stdout.write('* Saving output... ')
-    sys.stdout.flush()
+    log('  Saving output... ')
     tables_renum_df.pop('strain_name')
     # tables_renum_df.rename(columns={'variant_name':'strain_name'}, inplace=True)
     write_df_to_fasta(tables_renum_df, output_fasta, meta_col='strain_name',
                       seq_col='sequence')
     tables_renum_df.to_csv(output_table, sep='\t', index=False)
-    sys.stdout.write(' OK.\n')
+    log(' OK.\n')
     # print(tables)
     # print(fastas)

@@ -27,6 +27,7 @@ def log(x, end=True, time_stamp=True, force_end_line=True):
     if end:
         suffix = '\n'
     stdout.write(prefix+x+suffix)
+    stdout.flush()
 
 
 def get_python_path ():
